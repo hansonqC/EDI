@@ -65,7 +65,7 @@ public class MainController implements Initializable, Runnable {
     DocumentInvoiceModel documentInvoiceModel;
     DocumentInvoiceDao documentInvoiceDao;
     List<String> documentsToConnectWithPZ;
-    List<Integer> listOfDocumentsToConnect;
+    List<InvoiceModel> listOfDocumentsToConnect;
     private Service<Void> background;
     InvoiceModel invoiceModel;
     CartModelEdi cartModelEdi;
@@ -148,7 +148,7 @@ public class MainController implements Initializable, Runnable {
 
     private void Start() {
         if (Job()) {
-     //     Odswiez();
+       //     Odswiez();
         }
     }
 
@@ -159,20 +159,24 @@ public class MainController implements Initializable, Runnable {
         Runnable runnable1 = new Runnable() {
             @Override
             public void run() {
+                wypychacz();
                 Odswiez();
+            }
+        };
+        Runnable runnable2 = new Runnable() {
+            @Override
+            public void run() {
+                PowiazPz(listOfDocumentsToConnect);
             }
         };
         task = new Task<Void>() {
             @Override
             public Void call() {
-                if (Run()) {
-
-
-                    task.cancel();
-                    Platform.runLater(runnable1);
-
-                }
-                progressBar.setProgress(0.0d);
+                Run();
+                task.cancel();
+                Platform.runLater(runnable1);
+              //  Odswiez();
+                // progressBar.setProgress(0.0d);
                 return null;
             }
 
@@ -188,8 +192,8 @@ public class MainController implements Initializable, Runnable {
     private boolean Run() {
         try {
             listOfXml = LoadXml(invoices);
-            List<InvoiceModel> listToConnect = new ArrayList<>();
-            listToConnect = ImportPlikow(listOfXml);
+            listOfDocumentsToConnect = new ArrayList<>();
+            listOfDocumentsToConnect = ImportPlikow(listOfXml);
             return true;
         } catch (Exception ex) {
             logger.debug(ex.fillInStackTrace());
@@ -197,21 +201,21 @@ public class MainController implements Initializable, Runnable {
         }
     }
 
-    private boolean Import(List<DocumentInvoiceModel> listOfDocumentInvoiceModels) {
-        List<InvoiceModel> invoicesList = new ArrayList<>();
-        try {
-            invoicesList = ImportPlikow(listOfDocumentInvoiceModels);
-            return true;
-        } catch (Exception ex) {
-            logger.debug(ex.fillInStackTrace());
-
-        }
-
-//        } else if (!ImportPlikow()) {
-//            return false;
-
-        return false;
-    }
+//    private boolean Import(List<DocumentInvoiceModel> listOfDocumentInvoiceModels) {
+//        List<InvoiceModel> invoicesList = new ArrayList<>();
+//        try {
+//            invoicesList = ImportPlikow(listOfDocumentInvoiceModels);
+//            return true;
+//        } catch (Exception ex) {
+//            logger.debug(ex.fillInStackTrace());
+//
+//        }
+//
+////        } else if (!ImportPlikow()) {
+////            return false;
+//
+//        return false;
+//    }
 
     // Import Plików
     private List<InvoiceModel> ImportPlikow(List<DocumentInvoiceModel> listOfDocumentInvoiceModels2) {
@@ -254,11 +258,11 @@ public class MainController implements Initializable, Runnable {
                 invoiceModel.setNip(documentInvoiceModel.getInvoicePartiesModel().getSellerModel().getTaxID());
                 invoiceModel.setIln(documentInvoiceModel.getInvoicePartiesModel().getSellerModel().getILN());
                 invoiceModel.setSum(Double.valueOf(documentInvoiceModel.getSummaryModel().getTotalGrossAmount()));
+                invoiceModel.setIdKontrah(idKontrah);
                 List<CartModelEdi> list = new ArrayList<>();
                 double lines = (documentInvoiceModel.getLinesModel().getInvoiceLines().size());
                 double counter = 0.0;
                 double progress = (1d / lines);
-                JOptionPane.showMessageDialog(null, lines);
                 for (LineModel line : documentInvoiceModel.getLinesModel().getInvoiceLines()) {
                     cartModelEdi = new CartModelEdi();
                     cartModelEdi.setEan(line.getLineItemModel().getEAN());
@@ -327,13 +331,13 @@ public class MainController implements Initializable, Runnable {
                     //  Odswiez();
                 }
 
-                if (wypychacz()) {
-                    JOptionPane.showMessageDialog(null, "Poprawnie zaimportowano plik " + fileName);
-
-
-                } else if (!wypychacz()) {
-                    JOptionPane.showMessageDialog(null, "Błąd importu pliku : " + fileName, "Błąd importu 3", JOptionPane.ERROR_MESSAGE);
-                }
+//                if (wypychacz()) {
+//                    JOptionPane.showMessageDialog(null, "Poprawnie zaimportowano plik " + fileName);
+//
+//
+//                } else if (!wypychacz()) {
+//                    JOptionPane.showMessageDialog(null, "Błąd importu pliku : " + fileName, "Błąd importu 3", JOptionPane.ERROR_MESSAGE);
+//                }
 
 
                 modelList.add(invoiceModel);
@@ -350,139 +354,48 @@ public class MainController implements Initializable, Runnable {
     }
 
 
-    private InvoiceModel ImportXml(DocumentInvoiceModel xmlFile, String fileName) {
-        InvoiceModel invoiceModel;// = new InvoiceModel();
-        CartModelEdi cartModelEdi; //= new CartModelEdi();
-        String nip1 = xmlFile.getInvoicePartiesModel().getSellerModel().getTaxID();
-        String iln1 = xmlFile.getInvoicePartiesModel().getSellerModel().getILN();
-        // String nazwapliku = xmlFile. //invoices.get(listOfXml.indexOf(documentInvoiceModel));
-        int idKontrah = 0;
-        int nrKontrah = 0;
-        int urzzew_nagl = 0;
-        String kart_indeks = "";
-        List<Integer> seller = new ArrayList<>();
-        String invoiceNumber = xmlFile.getHeaderModel().getInvoiceNumber();
-        if (documentInvoiceDao.CheckIfDocumentExists(invoiceNumber)) {
-            JOptionPane.showMessageDialog(null, "Dokument o numerze: " + invoiceNumber + " był już importowany !\nPlik : " + fileName, "Błąd import", JOptionPane.ERROR_MESSAGE);
-            //  Odswiez();
-            return null;
-
-        }
-        if (documentInvoiceDao.getKontrah(nip1, iln1) != null) {
-            seller = documentInvoiceDao.getKontrah(nip1, iln1);
-        }
-        idKontrah = seller.get(0);
-        nrKontrah = seller.get(1);
-        invoiceModel = new InvoiceModel();
-        invoiceModel.setFileName(fileName);
-        invoiceModel.setSeller(String.valueOf(idKontrah));
-        invoiceModel.setSellerNr(String.valueOf(nrKontrah));
-        invoiceModel.setInvoiceNumber(xmlFile.getHeaderModel().getInvoiceNumber());
-        invoiceModel.setInvoiceDate(xmlFile.getHeaderModel().getInvoiceDate());
-        invoiceModel.setNip(xmlFile.getInvoicePartiesModel().getSellerModel().getTaxID());
-        invoiceModel.setIln(xmlFile.getInvoicePartiesModel().getSellerModel().getILN());
-        invoiceModel.setSum(Double.valueOf(xmlFile.getSummaryModel().getTotalGrossAmount()));
-        List<CartModelEdi> list = new ArrayList<>();
-        for (LineModel line : xmlFile.getLinesModel().getInvoiceLines()) {
-            cartModelEdi = new CartModelEdi();
-            cartModelEdi.setEan(line.getLineItemModel().getEAN());
-            cartModelEdi.setNetPice(line.getLineItemModel().getInvoiceUnitNetPrice());
-            cartModelEdi.setQuantity(line.getLineItemModel().getInvoiceQuantity());
-            cartModelEdi.setKartName(line.getLineItemModel().getItemDescription());
-            cartModelEdi.setZamdostNumber(line.getLineOrderModel().getBuyerOrderNumber());
-            if (line.getLineItemModel().getProductFeeDetailsModel() == null) {
-                cartModelEdi.setNetPice(line.getLineItemModel().getInvoiceUnitNetPrice());
-            } else {
-                cartModelEdi.setNetPice(line.getLineItemModel().getProductFeeDetailsModel().getUnitNetPriceWithoutFee());
-            }
-            String ean = line.getLineItemModel().getEAN();
-            try {
-                kart_indeks = documentInvoiceDao.GetKartIndeks(line.getLineItemModel().getEAN());
-                if ((kart_indeks.isEmpty()) || (kart_indeks == null)) {
-                    JOptionPane.showMessageDialog(null, "Błąd importu pliku " + fileName, "Nie znaleziono kartoteki o numerze EAN: " + ean + "\nlub podany numer EAN wskazany powtarza się.\nImport został przerwany\nNależy uzupełnić kod EAN w podanej kartotece", JOptionPane.ERROR_MESSAGE);
-                    logger.debug("Nie znaleziono kartoteki o numerze EAN: " + ean);
-                    //   Odswiez();
-                    return null;
-                } else {
-                    cartModelEdi.setIndeks(kart_indeks);
-                }
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(null, "Nie znaleziono kartoteki o numerze EAN: " + ean + "\nImport został przerwany\nNależy uzupełnić kod EAN w podanej kartotece : " + cartModelEdi.getKartName(), "Błąd importu pliku " + fileName, JOptionPane.ERROR_MESSAGE);
-                logger.debug("Nie znaleziono kartoteki o numerze EAN: " + ean + " (" + cartModelEdi.getKartName() + ")\n" + ex.getMessage());
-                //    Odswiez();
-                return null;
-            }
-            list.add(cartModelEdi);
-        }
-        invoiceModel.setPozycje(list);
-        ///  ZALOZENIE NAGLOWKA DOKUMENTU
-        try {
-            Thread.sleep(20);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        try {
-            urzzew_nagl = documentInvoiceDao.ImportPzNagl(invoiceModel);
-
-            for (CartModelEdi cartModelEdi1 : invoiceModel.getPozycje()) {
-                documentInvoiceDao.ImportPzPoz(invoiceModel, cartModelEdi1, urzzew_nagl);
-            }
-
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(null, "Nie udało się założyć nagłówka dla dokumentu : " + fileName);
-            //   Odswiez();
-        }
-
-        invoiceModel.setId_urzzew_nagl(urzzew_nagl);
-
-        try {
-            documentInvoiceDao.InsertNewDocumentNumber(invoiceModel);
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(null, "Błąd zapisu do tabeli zaimportowanego pliku : " + fileName, "Błąd importu 2", JOptionPane.ERROR_MESSAGE);
-            //  Odswiez();
-        }
-
-        //  if (wypychacz()) {
-        // int lol= PowiazPz(invoiceModel);
-        //    documentsToConnectWithPZ.add(nrdok2);
-        //  fileToMove.add(fileName);
-        //  int pz=documentInvoiceDao.GetIdNaglPZ(nrdok2);
-        Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                wypychacz();
-            }
-        };
-        Platform.runLater(runnable);
-        JOptionPane.showMessageDialog(null, "Poprawnie zaimportowano plik " + fileName);
-//                    for (String pz :)
-        //   Odswiez();
-        return invoiceModel;
-
-//        } else if (!wypychacz()) {
-//            JOptionPane.showMessageDialog(null, "Błąd importu pliku : " + fileName, "Błąd importu 3", JOptionPane.ERROR_MESSAGE);
-//
-//
-//        }
-
-
-        //  return null;
-    }
-
-
     //  Wiązanie PZ z ZAMDOST
-    private boolean PowiazPz(InvoiceModel invoiceModel) {
+    private boolean PowiazPz(List<InvoiceModel> invoiceModels) {
         DocumentInvoiceDao dao = new DocumentInvoiceDaoImpl();
-        int idPz = dao.GetIdNaglPZ(invoiceModel.getInvoiceNumber());//i
-        // for (CartModelEdi cartModelEdi : invoiceModel.getPozycje()) {
-        // int lol = dao.GetIdNaglPZ(dok);
-        //    int idPz=dao.GetIdNaglPZ("745361929");//invoiceModel.getInvoiceNumber());
-        JOptionPane.showMessageDialog(null, idPz);
+        int Pz;
+        int Zamdost;
+        for (InvoiceModel item : invoiceModels) {
+            for (CartModelEdi cartModelEdi : item.getPozycje()) {
+                int idZamDost = 0;
+                int idPz = 0;
+                // JOptionPane.showMessageDialog(null, item.getInvoiceNumber());
+                //  JOptionPane.showMessageDialog(null, cartModelEdi.getZamdostNumber());
+                idPz = dao.GetIdNaglPZ(invoiceModels.get(invoiceModels.indexOf(item)).getInvoiceNumber());
+                idZamDost = dao.GetIdNaglZAMDOST(cartModelEdi.getZamdostNumber(), item.getIdKontrah());
+                JOptionPane.showMessageDialog(null, "PZ: " + idPz + "\n" + "ZAMDOST: " + idZamDost);
+
+
+            }
+
+        }
+        //JOptionPane.showMessageDialog(null, idPz);
         // }
 
 
         //  Odswiez();
         return true;
+    }
+
+    private boolean GetPZ(int pz) {
+        return false;
+    }
+
+    private boolean GetZAMDOST(int zamdost, String number) {
+        DocumentInvoiceDao dao = new DocumentInvoiceDaoImpl();
+        try {
+            zamdost = dao.GetIdNaglPZ(number);
+
+            return true;
+        } catch (Exception ex) {
+            logger.debug(ex.fillInStackTrace());
+
+        }
+        return false;
     }
 
     // Wypchnięcie dokumentów z bufora
@@ -543,8 +456,9 @@ public class MainController implements Initializable, Runnable {
     }
 
     //  Odświeżanie widoku
-    private void Odswiez() {
+    private boolean Odswiez() {
         invoices.clear();
+        progressBar.setProgress(0.0d);
         //listOfXml.clear();
         listOfDocuments.getItems().clear();
         faktury.clear();
@@ -582,6 +496,7 @@ public class MainController implements Initializable, Runnable {
         buttonImport.setDisable(false);
         buttonConnect.setDisable(false);
         listOfDocuments.setDisable(false);
+        return true;
     }
 
 
@@ -1000,6 +915,132 @@ public class MainController implements Initializable, Runnable {
 
     // Stare metody uruchamiające import
     //////////////////URUCHAMIANIE WSZUSYKICH 3 METOD
+
+
+//    private InvoiceModel ImportXml(DocumentInvoiceModel xmlFile, String fileName) {
+//        InvoiceModel invoiceModel;// = new InvoiceModel();
+//        CartModelEdi cartModelEdi; //= new CartModelEdi();
+//        String nip1 = xmlFile.getInvoicePartiesModel().getSellerModel().getTaxID();
+//        String iln1 = xmlFile.getInvoicePartiesModel().getSellerModel().getILN();
+//        // String nazwapliku = xmlFile. //invoices.get(listOfXml.indexOf(documentInvoiceModel));
+//        int idKontrah = 0;
+//        int nrKontrah = 0;
+//        int urzzew_nagl = 0;
+//        String kart_indeks = "";
+//        List<Integer> seller = new ArrayList<>();
+//        String invoiceNumber = xmlFile.getHeaderModel().getInvoiceNumber();
+//        if (documentInvoiceDao.CheckIfDocumentExists(invoiceNumber)) {
+//            JOptionPane.showMessageDialog(null, "Dokument o numerze: " + invoiceNumber + " był już importowany !\nPlik : " + fileName, "Błąd import", JOptionPane.ERROR_MESSAGE);
+//            //  Odswiez();
+//            return null;
+//
+//        }
+//        if (documentInvoiceDao.CheckIfDocumentExists2(invoiceNumber)) {
+//            JOptionPane.showMessageDialog(null, "Dokument o numerze: " + invoiceNumber + " był już importowany !\nPlik : " + fileName, "Błąd import", JOptionPane.ERROR_MESSAGE);
+//            //  Odswiez();
+//            return null;
+//
+//        }
+//        if (documentInvoiceDao.getKontrah(nip1, iln1) != null) {
+//            seller = documentInvoiceDao.getKontrah(nip1, iln1);
+//        }
+//        idKontrah = seller.get(0);
+//        nrKontrah = seller.get(1);
+//        invoiceModel = new InvoiceModel();
+//        invoiceModel.setFileName(fileName);
+//        invoiceModel.setSeller(String.valueOf(idKontrah));
+//        invoiceModel.setSellerNr(String.valueOf(nrKontrah));
+//        invoiceModel.setInvoiceNumber(xmlFile.getHeaderModel().getInvoiceNumber());
+//        invoiceModel.setInvoiceDate(xmlFile.getHeaderModel().getInvoiceDate());
+//        invoiceModel.setNip(xmlFile.getInvoicePartiesModel().getSellerModel().getTaxID());
+//        invoiceModel.setIln(xmlFile.getInvoicePartiesModel().getSellerModel().getILN());
+//        invoiceModel.setSum(Double.valueOf(xmlFile.getSummaryModel().getTotalGrossAmount()));
+//        List<CartModelEdi> list = new ArrayList<>();
+//        for (LineModel line : xmlFile.getLinesModel().getInvoiceLines()) {
+//            cartModelEdi = new CartModelEdi();
+//            cartModelEdi.setEan(line.getLineItemModel().getEAN());
+//            cartModelEdi.setNetPice(line.getLineItemModel().getInvoiceUnitNetPrice());
+//            cartModelEdi.setQuantity(line.getLineItemModel().getInvoiceQuantity());
+//            cartModelEdi.setKartName(line.getLineItemModel().getItemDescription());
+//            cartModelEdi.setZamdostNumber(line.getLineOrderModel().getBuyerOrderNumber());
+//            if (line.getLineItemModel().getProductFeeDetailsModel() == null) {
+//                cartModelEdi.setNetPice(line.getLineItemModel().getInvoiceUnitNetPrice());
+//            } else {
+//                cartModelEdi.setNetPice(line.getLineItemModel().getProductFeeDetailsModel().getUnitNetPriceWithoutFee());
+//            }
+//            String ean = line.getLineItemModel().getEAN();
+//            try {
+//                kart_indeks = documentInvoiceDao.GetKartIndeks(line.getLineItemModel().getEAN());
+//                if ((kart_indeks.isEmpty()) || (kart_indeks == null)) {
+//                    JOptionPane.showMessageDialog(null, "Błąd importu pliku " + fileName, "Nie znaleziono kartoteki o numerze EAN: " + ean + "\nlub podany numer EAN wskazany powtarza się.\nImport został przerwany\nNależy uzupełnić kod EAN w podanej kartotece", JOptionPane.ERROR_MESSAGE);
+//                    logger.debug("Nie znaleziono kartoteki o numerze EAN: " + ean);
+//                    //   Odswiez();
+//                    return null;
+//                } else {
+//                    cartModelEdi.setIndeks(kart_indeks);
+//                }
+//            } catch (Exception ex) {
+//                JOptionPane.showMessageDialog(null, "Nie znaleziono kartoteki o numerze EAN: " + ean + "\nImport został przerwany\nNależy uzupełnić kod EAN w podanej kartotece : " + cartModelEdi.getKartName(), "Błąd importu pliku " + fileName, JOptionPane.ERROR_MESSAGE);
+//                logger.debug("Nie znaleziono kartoteki o numerze EAN: " + ean + " (" + cartModelEdi.getKartName() + ")\n" + ex.getMessage());
+//                //    Odswiez();
+//                return null;
+//            }
+//            list.add(cartModelEdi);
+//        }
+//        invoiceModel.setPozycje(list);
+//        ///  ZALOZENIE NAGLOWKA DOKUMENTU
+//        try {
+//            Thread.sleep(20);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
+//        try {
+//            urzzew_nagl = documentInvoiceDao.ImportPzNagl(invoiceModel);
+//
+//            for (CartModelEdi cartModelEdi1 : invoiceModel.getPozycje()) {
+//                documentInvoiceDao.ImportPzPoz(invoiceModel, cartModelEdi1, urzzew_nagl);
+//            }
+//
+//        } catch (Exception ex) {
+//            JOptionPane.showMessageDialog(null, "Nie udało się założyć nagłówka dla dokumentu : " + fileName);
+//            //   Odswiez();
+//        }
+//
+//        invoiceModel.setId_urzzew_nagl(urzzew_nagl);
+//
+//        try {
+//            documentInvoiceDao.InsertNewDocumentNumber(invoiceModel);
+//    //    } catch (Exception ex) {
+    //       JOptionPane.showMessageDialog(null, "Błąd zapisu do tabeli zaimportowanego pliku : " + fileName, "Błąd importu 2", JOptionPane.ERROR_MESSAGE);
+    //  Odswiez();
+    //    }
+
+    //  if (wypychacz()) {
+    // int lol= PowiazPz(invoiceModel);
+    //    documentsToConnectWithPZ.add(nrdok2);
+    //  fileToMove.add(fileName);
+    //  int pz=documentInvoiceDao.GetIdNaglPZ(nrdok2);
+//        Runnable runnable = new Runnable() {
+//            @Override
+//            public void run() {
+//                wypychacz();
+//            }
+//        };
+//        Platform.runLater(runnable);
+//        JOptionPane.showMessageDialog(null, "Poprawnie zaimportowano plik " + fileName);
+//                    for (String pz :)
+    //   Odswiez();
+//        return invoiceModel;
+//
+//        } else if (!wypychacz()) {
+//            JOptionPane.showMessageDialog(null, "Błąd importu pliku : " + fileName, "Błąd importu 3", JOptionPane.ERROR_MESSAGE);
+//
+//
+//        }
+
+
+    //  return null;
+    //   }
 
 //    String nip1 = documentInvoiceModel.getInvoicePartiesModel().getSellerModel().getTaxID();
 //    String iln1 = documentInvoiceModel.getInvoicePartiesModel().getSellerModel().getILN();

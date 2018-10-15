@@ -1,28 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
-<?import javafx.scene.control.RadioButton?>
+<?import javafx.scene.control.ProgressBar?>
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
-<?import javafx.scene.control.ToggleGroup?>
 <?import javafx.scene.input.KeyCodeCombination?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane maxHeight="670.0" maxWidth="950.0" minHeight="-Infinity" minWidth="-Infinity" prefHeight="670.0" prefWidth="950.0" style="-fx-background-color: #b3b3ff;" stylesheets="@style.css" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="pl.hansonq.controllers.MainController">
+<AnchorPane maxHeight="670.0" maxWidth="950.0" minHeight="-Infinity" minWidth="-Infinity" prefHeight="570.0" prefWidth="500.0" style="-fx-background-color: #3366ff;" stylesheets="@style.css" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="pl.hansonq.controllers.MainController">
    <children>
-      <AnchorPane layoutX="1.0" layoutY="91.0" prefHeight="262.0" prefWidth="515.0" AnchorPane.bottomAnchor="320.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
-         <children>
-            <ListView fx:id="log" layoutX="14.0" layoutY="14.0" prefHeight="245.0" prefWidth="950.0" AnchorPane.bottomAnchor="3.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" />
-         </children>
-      </AnchorPane>
+      <AnchorPane layoutY="104.0" prefHeight="267.0" prefWidth="950.0" AnchorPane.bottomAnchor="299.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="104.0" />
       <HBox layoutX="1.0" layoutY="-1.0" />
       <AnchorPane layoutX="1.0" layoutY="-1.0" prefHeight="30.0" prefWidth="142.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
          <children>
@@ -64,57 +60,46 @@
       </AnchorPane>
       <AnchorPane layoutX="14.0" layoutY="42.0" prefHeight="62.0" prefWidth="912.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
          <children>
-            <Button fx:id="loadButton" alignment="CENTER" contentDisplay="CENTER" defaultButton="true" layoutX="5.0" layoutY="13.0" mnemonicParsing="false" prefHeight="30.0" prefWidth="102.0" text="Wczytaj plik..." AnchorPane.leftAnchor="10.0" />
-            <TextField fx:id="textFileImport" editable="false" layoutX="113.0" layoutY="14.0" prefHeight="30.0" prefWidth="816.0" style="-fx-background-color: white;" AnchorPane.leftAnchor="120.0" AnchorPane.rightAnchor="10.0">
+            <Button fx:id="loadButton" alignment="CENTER" contentDisplay="CENTER" defaultButton="true" layoutX="5.0" layoutY="13.0" mnemonicParsing="false" prefHeight="30.0" prefWidth="102.0" text="Wczytaj plik..." visible="false" AnchorPane.leftAnchor="10.0" />
+            <TextField fx:id="textFileImport" editable="false" layoutX="113.0" layoutY="14.0" prefHeight="30.0" prefWidth="297.0" style="-fx-background-color: white;" visible="false" AnchorPane.leftAnchor="120.0" AnchorPane.rightAnchor="8.0">
                <font>
-                  <Font size="14.0" />
+                  <Font size="10.0" />
                </font>
             </TextField>
+            <CheckBox fx:id="check" layoutX="17.0" layoutY="29.0" mnemonicParsing="false" text="Zaznacz wszystkie" textFill="WHITE" visible="false">
+               <font>
+                  <Font name="Calibri Light Italic" size="12.0" />
+               </font>
+            </CheckBox>
          </children>
       </AnchorPane>
-      <AnchorPane layoutY="430.0" prefHeight="246.0" prefWidth="950.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
+      <AnchorPane layoutY="362.0" prefHeight="197.0" prefWidth="500.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
          <children>
-            <Button fx:id="buttonImport" layoutX="9.0" layoutY="120.0" mnemonicParsing="false" prefHeight="30.0" prefWidth="102.0" text="Importuj ">
+            <Button fx:id="buttonImport" layoutX="8.0" layoutY="169.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="81.0" text="Importuj " textFill="#ff0404">
                <font>
-                  <Font name="System Bold" size="14.0" />
+                  <Font name="System Bold" size="10.0" />
                </font>
             </Button>
-            <RadioButton fx:id="radioButton1" layoutX="14.0" layoutY="66.0" mnemonicParsing="false" text="1">
+            <Label fx:id="labelVersion" layoutX="900.0" layoutY="136.0" prefHeight="15.0" prefWidth="50.0" textFill="WHITE">
                <font>
-                  <Font name="System Bold" size="14.0" />
+                  <Font size="10.0" />
                </font>
-               <toggleGroup>
-                  <ToggleGroup fx:id="importOption" />
-               </toggleGroup>
-            </RadioButton>
-            <RadioButton fx:id="radioButton2" layoutX="77.0" layoutY="66.0" mnemonicParsing="false" text="2" toggleGroup="$importOption">
+            </Label>
+            <Separator layoutX="8.0" layoutY="149.0" prefHeight="17.0" prefWidth="483.0" AnchorPane.leftAnchor="8.0" AnchorPane.rightAnchor="9.0" />
+            <ProgressBar fx:id="progressBar" layoutX="8.0" layoutY="127.0" prefHeight="18.0" prefWidth="421.0" progress="0.0" AnchorPane.leftAnchor="8.0" AnchorPane.rightAnchor="8.0" />
+            <Button fx:id="buttonRefresh" layoutX="209.0" layoutY="169.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="81.0" text="Odśwież">
                <font>
-                  <Font name="System Bold" size="14.0" />
+                  <Font name="System Bold" size="10.0" />
                </font>
-            </RadioButton>
-            <RadioButton fx:id="radioButton3" layoutX="145.0" layoutY="66.0" mnemonicParsing="false" text="3" toggleGroup="$importOption">
+            </Button>
+            <Button fx:id="buttonConnect" layoutX="8.0" layoutY="203.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="127.0" text="Powiąż PZ z ZAMDOST" visible="false">
                <font>
-                  <Font name="System Bold" size="14.0" />
+                  <Font name="System Bold" size="10.0" />
                </font>
-            </RadioButton>
-            <RadioButton fx:id="radioButton4" layoutX="214.0" layoutY="66.0" mnemonicParsing="false" text="4" toggleGroup="$importOption">
-               <font>
-                  <Font name="System Bold" size="14.0" />
-               </font>
-            </RadioButton>
-            <RadioButton fx:id="radioButton5" layoutX="287.0" layoutY="66.0" mnemonicParsing="false" text="5" toggleGroup="$importOption">
-               <font>
-                  <Font name="System Bold" size="14.0" />
-               </font>
-            </RadioButton>
-            <Label layoutX="14.0" layoutY="37.0" text="Opcje importu :" />
-            <TextArea fx:id="textArea" editable="false" layoutX="7.0" layoutY="161.0" prefHeight="150.0" prefWidth="362.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
-               <font>
-                  <Font name="System Bold" size="14.0" />
-               </font>
-            </TextArea>
-            <Separator layoutX="15.0" layoutY="4.0" prefHeight="17.0" prefWidth="965.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" />
+            </Button>
          </children>
       </AnchorPane>
+      <TextArea fx:id="textArea2" layoutX="9.0" layoutY="94.0" prefHeight="373.0" prefWidth="679.0" AnchorPane.leftAnchor="9.0" AnchorPane.rightAnchor="8.0" AnchorPane.topAnchor="94.0" />
+      <ListView fx:id="listOfDocuments" layoutX="9.0" layoutY="46.0" prefHeight="421.0" prefWidth="483.0" style="-fx-background-color: lightblue;" AnchorPane.leftAnchor="9.0" AnchorPane.rightAnchor="8.0" />
    </children>
 </AnchorPane>

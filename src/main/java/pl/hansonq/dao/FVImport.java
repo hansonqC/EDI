@@ -1,6 +1,6 @@
-package pl.hansonq.dao.Impl;
+package pl.hansonq.dao;
 
 public interface FVImport {
 
-boolean Import()
+boolean Import();
 }

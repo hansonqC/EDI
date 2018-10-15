@@ -22,47 +22,47 @@ public class CartModel {
     private String nazwaZdjecia;
     private String dokumentacja;
     private String uwagi;
+    private String jestUwaga;
     private String ostrzezenie;
+    private String jestOstrzezenie;
     private String kgo;
     private String waga;
     private String kartotekiPowiazane;
     private String zamienniki;
     private String idPriorytet;
-    private String opakowanieZbiorcze1;
-    private String opakowanieZbiorcze2;
-    private String opakowanieZbiorcze3;
-    private String stawkaVat;
+    private String iloscOpakowanieZbiorcze1;
+    private String iloscOpakowanieZbiorcze2;
+    private String iloscOpakowanieZbiorcze3;
+    private String idStawkiVat;
     private String opis;
     private String stronaWWW;
     private String grupaRabatowa;
     private String grupaBonusowa;
-    private String producent;
-    private String grupaKartotekowa1;
-    private String grupaKartotekowa2;
-    private String grupaKartotekowa3;
-    private String grupaKartotekowa4;
-    private String grupaKartotekowa5;
-    private String grupaKartotekowaX;
-    private String cechaWkatalogu;
-    private String cechaNapiecie;
-    private String cechaMoc;
+    private String kodProducent;
+
+    private String kodGrupaKartotekowa1;
+    private String kodGrupaKartotekowa2;
+    private String kodGrupaKartotekowa3;
+    private String kodGrupaKartotekowa4;
+    private String kodGrupaKartotekowa5;
+    private String kodGrupaKartotekowaX;
+
     private String idDodatkowegoOpakowanieZbiorczegoEAN;
     private String idOpakowaniaZbiorczego1;
     private String idOpakowaniaZbiorczego2;
     private String idOpakowaniaZbiorczego3;
     private String idTypOpisu;
-    private String idStawkiVat;
+   private String idPodstawowejStawkiVat;
     private String idRodzajuGrupyKartotekowejProducent;
+    private String idRodzajuGrupyKartotekowej;
     private String idRodzajuGrupyKartotekowej1;
     private String idRodzajuGrupyKartotekowej2;
     private String idRodzajuGrupyKartotekowej3;
     private String idRodzajuGrupyKartotekowej4;
     private String idRodzajuGrupyKartotekowej5;
     private String idRodzajuGrupyKartotekowejX;
-
-
-    private String idProperty;
-    private Map<Integer, String> cechy;
+    private String idCechy;
+    private String wartoscCechy;
 
     public CartModel() {
     }
@@ -179,12 +179,28 @@ public class CartModel {
         this.uwagi = uwagi;
     }
 
+    public String getJestUwaga() {
+        return jestUwaga;
+    }
+
+    public void setJestUwaga(String jestUwaga) {
+        this.jestUwaga = jestUwaga;
+    }
+
     public String getOstrzezenie() {
         return ostrzezenie;
     }
 
     public void setOstrzezenie(String ostrzezenie) {
         this.ostrzezenie = ostrzezenie;
+    }
+
+    public String getJestOstrzezenie() {
+        return jestOstrzezenie;
+    }
+
+    public void setJestOstrzezenie(String jestOstrzezenie) {
+        this.jestOstrzezenie = jestOstrzezenie;
     }
 
     public String getKgo() {
@@ -227,36 +243,44 @@ public class CartModel {
         this.idPriorytet = idPriorytet;
     }
 
-    public String getOpakowanieZbiorcze1() {
-        return opakowanieZbiorcze1;
+    public String getIloscOpakowanieZbiorcze1() {
+        return iloscOpakowanieZbiorcze1;
     }
 
-    public void setOpakowanieZbiorcze1(String opakowanieZbiorcze1) {
-        this.opakowanieZbiorcze1 = opakowanieZbiorcze1;
+    public void setIloscOpakowanieZbiorcze1(String iloscOpakowanieZbiorcze1) {
+        this.iloscOpakowanieZbiorcze1 = iloscOpakowanieZbiorcze1;
     }
 
-    public String getOpakowanieZbiorcze2() {
-        return opakowanieZbiorcze2;
+    public String getIloscOpakowanieZbiorcze2() {
+        return iloscOpakowanieZbiorcze2;
     }
 
-    public void setOpakowanieZbiorcze2(String opakowanieZbiorcze2) {
-        this.opakowanieZbiorcze2 = opakowanieZbiorcze2;
+    public void setIloscOpakowanieZbiorcze2(String iloscOpakowanieZbiorcze2) {
+        this.iloscOpakowanieZbiorcze2 = iloscOpakowanieZbiorcze2;
     }
 
-    public String getOpakowanieZbiorcze3() {
-        return opakowanieZbiorcze3;
+    public String getIloscOpakowanieZbiorcze3() {
+        return iloscOpakowanieZbiorcze3;
     }
 
-    public void setOpakowanieZbiorcze3(String opakowanieZbiorcze3) {
-        this.opakowanieZbiorcze3 = opakowanieZbiorcze3;
+    public void setIloscOpakowanieZbiorcze3(String iloscOpakowanieZbiorcze3) {
+        this.iloscOpakowanieZbiorcze3 = iloscOpakowanieZbiorcze3;
     }
 
-    public String getStawkaVat() {
-        return stawkaVat;
+    public String getIdPodstawowejStawkiVat() {
+        return idPodstawowejStawkiVat;
     }
 
-    public void setStawkaVat(String stawkaVat) {
-        this.stawkaVat = stawkaVat;
+    public void setIdPodstawowejStawkiVat(String idPodstawowejStawkiVat) {
+        this.idPodstawowejStawkiVat = idPodstawowejStawkiVat;
+    }
+
+    public String getIdStawkiVat() {
+        return idStawkiVat;
+    }
+
+    public void setIdStawkiVat(String idStawkiVat) {
+        this.idStawkiVat = idStawkiVat;
     }
 
     public String getOpis() {
@@ -291,85 +315,64 @@ public class CartModel {
         this.grupaBonusowa = grupaBonusowa;
     }
 
-    public String getProducent() {
-        return producent;
+    public String getKodProducent() {
+        return kodProducent;
     }
 
-    public void setProducent(String producent) {
-        this.producent = producent;
+    public void setKodProducent(String kodProducent) {
+        this.kodProducent = kodProducent;
     }
 
-    public String getGrupaKartotekowa1() {
-        return grupaKartotekowa1;
+
+    public String getKodGrupaKartotekowa1() {
+        return kodGrupaKartotekowa1;
     }
 
-    public void setGrupaKartotekowa1(String grupaKartotekowa1) {
-        this.grupaKartotekowa1 = grupaKartotekowa1;
+    public void setKodGrupaKartotekowa1(String kodGrupaKartotekowa1) {
+        this.kodGrupaKartotekowa1 = kodGrupaKartotekowa1;
     }
 
-    public String getGrupaKartotekowa2() {
-        return grupaKartotekowa2;
+    public String getKodGrupaKartotekowa2() {
+        return kodGrupaKartotekowa2;
     }
 
-    public void setGrupaKartotekowa2(String grupaKartotekowa2) {
-        this.grupaKartotekowa2 = grupaKartotekowa2;
+    public void setKodGrupaKartotekowa2(String kodGrupaKartotekowa2) {
+        this.kodGrupaKartotekowa2 = kodGrupaKartotekowa2;
     }
 
-    public String getGrupaKartotekowa3() {
-        return grupaKartotekowa3;
+    public String getKodGrupaKartotekowa3() {
+        return kodGrupaKartotekowa3;
     }
 
-    public void setGrupaKartotekowa3(String grupaKartotekowa3) {
-        this.grupaKartotekowa3 = grupaKartotekowa3;
+    public void setKodGrupaKartotekowa3(String kodGrupaKartotekowa3) {
+        this.kodGrupaKartotekowa3 = kodGrupaKartotekowa3;
     }
 
-    public String getGrupaKartotekowa4() {
-        return grupaKartotekowa4;
+    public String getKodGrupaKartotekowa4() {
+        return kodGrupaKartotekowa4;
     }
 
-    public void setGrupaKartotekowa4(String grupaKartotekowa4) {
-        this.grupaKartotekowa4 = grupaKartotekowa4;
+    public void setKodGrupaKartotekowa4(String kodGrupaKartotekowa4) {
+        this.kodGrupaKartotekowa4 = kodGrupaKartotekowa4;
     }
 
-    public String getGrupaKartotekowa5() {
-        return grupaKartotekowa5;
+    public String getKodGrupaKartotekowa5() {
+        return kodGrupaKartotekowa5;
     }
 
-    public void setGrupaKartotekowa5(String grupaKartotekowa5) {
-        this.grupaKartotekowa5 = grupaKartotekowa5;
+    public void setKodGrupaKartotekowa5(String kodGrupaKartotekowa5) {
+        this.kodGrupaKartotekowa5 = kodGrupaKartotekowa5;
     }
 
-    public String getGrupaKartotekowaX() {
-        return grupaKartotekowaX;
+    public String getKodGrupaKartotekowaX() {
+        return kodGrupaKartotekowaX;
     }
 
-    public void setGrupaKartotekowaX(String grupaKartotekowaX) {
-        this.grupaKartotekowaX = grupaKartotekowaX;
+    public void setKodGrupaKartotekowaX(String kodGrupaKartotekowaX) {
+        this.kodGrupaKartotekowaX = kodGrupaKartotekowaX;
     }
 
-    public String getCechaWkatalogu() {
-        return cechaWkatalogu;
-    }
 
-    public void setCechaWkatalogu(String cechaWkatalogu) {
-        this.cechaWkatalogu = cechaWkatalogu;
-    }
-
-    public String getCechaNapiecie() {
-        return cechaNapiecie;
-    }
-
-    public void setCechaNapiecie(String cechaNapiecie) {
-        this.cechaNapiecie = cechaNapiecie;
-    }
-
-    public String getCechaMoc() {
-        return cechaMoc;
-    }
-
-    public void setCechaMoc(String cechaMoc) {
-        this.cechaMoc = cechaMoc;
-    }
 
     public String getIdDodatkowegoOpakowanieZbiorczegoEAN() {
         return idDodatkowegoOpakowanieZbiorczegoEAN;
@@ -411,13 +414,13 @@ public class CartModel {
         this.idTypOpisu = idTypOpisu;
     }
 
-    public String getIdStawkiVat() {
-        return idStawkiVat;
-    }
-
-    public void setIdStawkiVat(String idStawkiVat) {
-        this.idStawkiVat = idStawkiVat;
-    }
+//    public String getIdPodstawowejStawkiVat() {
+//        return idPodstawowejStawkiVat;
+//    }
+//
+//    public void setIdPodstawowejStawkiVat(String idPodstawowejStawkiVat) {
+//        this.idPodstawowejStawkiVat = idPodstawowejStawkiVat;
+//    }
 
     public String getIdRodzajuGrupyKartotekowejProducent() {
         return idRodzajuGrupyKartotekowejProducent;
@@ -425,6 +428,14 @@ public class CartModel {
 
     public void setIdRodzajuGrupyKartotekowejProducent(String idRodzajuGrupyKartotekowejProducent) {
         this.idRodzajuGrupyKartotekowejProducent = idRodzajuGrupyKartotekowejProducent;
+    }
+
+    public String getIdRodzajuGrupyKartotekowej() {
+        return idRodzajuGrupyKartotekowej;
+    }
+
+    public void setIdRodzajuGrupyKartotekowej(String idRodzajuGrupyKartotekowej) {
+        this.idRodzajuGrupyKartotekowej = idRodzajuGrupyKartotekowej;
     }
 
     public String getIdRodzajuGrupyKartotekowej1() {
@@ -451,22 +462,6 @@ public class CartModel {
         this.idRodzajuGrupyKartotekowej3 = idRodzajuGrupyKartotekowej3;
     }
 
-    public String getIdProperty() {
-        return idProperty;
-    }
-
-    public void setIdProperty(String idProperty) {
-        this.idProperty = idProperty;
-    }
-
-    public Map<Integer, String> getCechy() {
-        return cechy;
-    }
-
-    public void setCechy(Map<Integer, String> cechy) {
-        this.cechy = cechy;
-    }
-
     public String getIdRodzajuGrupyKartotekowej4() {
         return idRodzajuGrupyKartotekowej4;
     }
@@ -491,6 +486,22 @@ public class CartModel {
         this.idRodzajuGrupyKartotekowejX = idRodzajuGrupyKartotekowejX;
     }
 
+    public String getIdCechy() {
+        return idCechy;
+    }
+
+    public void setIdCechy(String idCechy) {
+        this.idCechy = idCechy;
+    }
+
+    public String getWartoscCechy() {
+        return wartoscCechy;
+    }
+
+    public void setWartoscCechy(String wartoscCechy) {
+        this.wartoscCechy = wartoscCechy;
+    }
+
     @Override
     public String toString() {
         return "CartModel{" +
@@ -508,45 +519,46 @@ public class CartModel {
                 ", nazwaZdjecia='" + nazwaZdjecia + '\'' +
                 ", dokumentacja='" + dokumentacja + '\'' +
                 ", uwagi='" + uwagi + '\'' +
+                ", jestUwaga='" + jestUwaga + '\'' +
                 ", ostrzezenie='" + ostrzezenie + '\'' +
+                ", jestOstrzezenie='" + jestOstrzezenie + '\'' +
                 ", kgo='" + kgo + '\'' +
                 ", waga='" + waga + '\'' +
                 ", kartotekiPowiazane='" + kartotekiPowiazane + '\'' +
                 ", zamienniki='" + zamienniki + '\'' +
                 ", idPriorytet='" + idPriorytet + '\'' +
-                ", opakowanieZbiorcze1='" + opakowanieZbiorcze1 + '\'' +
-                ", opakowanieZbiorcze2='" + opakowanieZbiorcze2 + '\'' +
-                ", opakowanieZbiorcze3='" + opakowanieZbiorcze3 + '\'' +
-                ", stawkaVat='" + stawkaVat + '\'' +
+                ", iloscOpakowanieZbiorcze1='" + iloscOpakowanieZbiorcze1 + '\'' +
+                ", iloscOpakowanieZbiorcze2='" + iloscOpakowanieZbiorcze2 + '\'' +
+                ", iloscoOpakowanieZbiorcze3='" + iloscOpakowanieZbiorcze3 + '\'' +
+                ", idStawkiVat='" + idStawkiVat + '\'' +
                 ", opis='" + opis + '\'' +
                 ", stronaWWW='" + stronaWWW + '\'' +
                 ", grupaRabatowa='" + grupaRabatowa + '\'' +
                 ", grupaBonusowa='" + grupaBonusowa + '\'' +
-                ", producent='" + producent + '\'' +
-                ", grupaKartotekowa1='" + grupaKartotekowa1 + '\'' +
-                ", grupaKartotekowa2='" + grupaKartotekowa2 + '\'' +
-                ", grupaKartotekowa3='" + grupaKartotekowa3 + '\'' +
-                ", grupaKartotekowa4='" + grupaKartotekowa4 + '\'' +
-                ", grupaKartotekowa5='" + grupaKartotekowa5 + '\'' +
-                ", grupaKartotekowaX='" + grupaKartotekowaX + '\'' +
-                ", cechaWkatalogu='" + cechaWkatalogu + '\'' +
-                ", cechaNapiecie='" + cechaNapiecie + '\'' +
-                ", cechaMoc='" + cechaMoc + '\'' +
+                ", kodProducent='" + kodProducent + '\'' +
+                ", kodGgrupaKartotekowa1='" + kodGrupaKartotekowa1 + '\'' +
+                ", kodGrupaKartotekowa2='" + kodGrupaKartotekowa2 + '\'' +
+                ", kodGrupaKartotekowa3='" + kodGrupaKartotekowa3 + '\'' +
+                ", kodGrupaKartotekowa4='" + kodGrupaKartotekowa4 + '\'' +
+                ", kodGrupaKartotekowa5='" + kodGrupaKartotekowa5 + '\'' +
+                ", kodGrupaKartotekowaX='" + kodGrupaKartotekowaX + '\'' +
+
                 ", idDodatkowegoOpakowanieZbiorczegoEAN='" + idDodatkowegoOpakowanieZbiorczegoEAN + '\'' +
                 ", idOpakowaniaZbiorczego1='" + idOpakowaniaZbiorczego1 + '\'' +
                 ", idOpakowaniaZbiorczego2='" + idOpakowaniaZbiorczego2 + '\'' +
                 ", idOpakowaniaZbiorczego3='" + idOpakowaniaZbiorczego3 + '\'' +
                 ", idTypOpisu='" + idTypOpisu + '\'' +
-                ", idStawkiVat='" + idStawkiVat + '\'' +
+
                 ", idRodzajuGrupyKartotekowejProducent='" + idRodzajuGrupyKartotekowejProducent + '\'' +
+                ", idRodzajuGrupyKartotekowej='" + idRodzajuGrupyKartotekowej + '\'' +
                 ", idRodzajuGrupyKartotekowej1='" + idRodzajuGrupyKartotekowej1 + '\'' +
                 ", idRodzajuGrupyKartotekowej2='" + idRodzajuGrupyKartotekowej2 + '\'' +
                 ", idRodzajuGrupyKartotekowej3='" + idRodzajuGrupyKartotekowej3 + '\'' +
                 ", idRodzajuGrupyKartotekowej4='" + idRodzajuGrupyKartotekowej4 + '\'' +
                 ", idRodzajuGrupyKartotekowej5='" + idRodzajuGrupyKartotekowej5 + '\'' +
                 ", idRodzajuGrupyKartotekowejX='" + idRodzajuGrupyKartotekowejX + '\'' +
-                ", idProperty='" + idProperty + '\'' +
-                ", cechy=" + cechy +
+                ", idCechy='" + idCechy + '\'' +
+                ", wartoscCechy='" + wartoscCechy + '\'' +
                 '}';
     }
 }

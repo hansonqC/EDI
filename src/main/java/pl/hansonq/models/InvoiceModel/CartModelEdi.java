@@ -1,24 +1,21 @@
 package pl.hansonq.models.InvoiceModel;
 
-public class CartModel {
+public class CartModelEdi {
     private String ean;
     private String netPice;
     private String grossPrice;
     private String quantity;
     private String supplierCode;
     private String tax;
+    private String indeks;
+    private String kartName;
+    private String zamdostNumber;
 
-    public CartModel(String ean, String netPice, String grossPrice, String quantity, String supplierCode, String tax) {
-        this.ean = ean;
-        this.netPice = netPice;
-        this.grossPrice = grossPrice;
-        this.quantity = quantity;
-        this.supplierCode = supplierCode;
-        this.tax = tax;
+    // private String netPriceWithoutFee;
+
+    public CartModelEdi() {
     }
 
-    public CartModel() {
-    }
 
     public String getEan() {
         return ean;
@@ -68,15 +65,42 @@ public class CartModel {
         this.tax = tax;
     }
 
+    public String getIndeks() {
+        return indeks;
+    }
+
+    public void setIndeks(String indeks) {
+        this.indeks = indeks;
+    }
+
+    public String getKartName() {
+        return kartName;
+    }
+
+    public void setKartName(String kartName) {
+        this.kartName = kartName;
+    }
+
+    public String getZamdostNumber() {
+        return zamdostNumber;
+    }
+
+    public void setZamdostNumber(String zamdostNumber) {
+        this.zamdostNumber = zamdostNumber;
+    }
+
     @Override
     public String toString() {
-        return "CartModel{" +
+        return "CartModelEdi{" +
                 "ean='" + ean + '\'' +
                 ", netPice='" + netPice + '\'' +
                 ", grossPrice='" + grossPrice + '\'' +
                 ", quantity='" + quantity + '\'' +
                 ", supplierCode='" + supplierCode + '\'' +
                 ", tax='" + tax + '\'' +
+                ", indeks='" + indeks + '\'' +
+                ", kartName='" + kartName + '\'' +
+                ", zamdostNumber='" + zamdostNumber + '\'' +
                 '}';
     }
 }

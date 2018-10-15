@@ -2,13 +2,18 @@ package pl.hansonq.dao;
 
 import pl.hansonq.models.CartModel;
 
+
 import java.util.Map;
 
 public interface CartDao {
-    boolean AddCart(CartModel Kartoteka);
-    boolean DeleteCart(int id_kartoteka);
+    boolean UpdatePrice(CartModel Kartoteka);
+    boolean DeleteCart(CartModel cartModel);
     boolean UpdateCart(CartModel Kartoteka);
-    boolean Add(int id_kart, int id_opis, String opis);
-    boolean AddProperties(int id_kartoteka,Map<Integer,String>cecha);
+    boolean UpdateCart3(CartModel Kartoteka);
+
+ //   boolean AddProperties(PropertyModel propertyModel,int punkt);
+    boolean AddCart(CartModel cartModel);
+    boolean AddCart4(CartModel cartModel,int punkt);
+   int SelectCart(CartModel cartModel);
 
 }
