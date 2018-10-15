@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane fx:id="anchorPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="700.0" prefWidth="585.0" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="pl.hansonq.controllers.SettingsController">
+   <children>
+      <HBox alignment="BASELINE_LEFT" layoutX="11.0" layoutY="618.0" prefHeight="35.0" prefWidth="360.0" />
+      <Button fx:id="buttonSave" defaultButton="true" layoutX="261.0" layoutY="653.0" minWidth="70.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="70.0" text="Zapisz" />
+      <PasswordField fx:id="textPassword" alignment="CENTER" layoutX="159.0" layoutY="54.0" prefHeight="25.0" prefWidth="124.0" promptText="hasło" />
+      <TextField fx:id="textLogin" alignment="CENTER" layoutX="18.0" layoutY="54.0" prefHeight="17.0" prefWidth="124.0" promptText="login" />
+      <Label layoutX="18.0" layoutY="8.0" text="Ustawienia bazy danych" textFill="#1e1aff">
+         <font>
+            <Font name="System Bold" size="14.0" />
+         </font>
+      </Label>
+      <Label layoutX="19.0" layoutY="89.0" text="Lokalizacja bazy danych firmy:" textFill="#650202" />
+      <Label layoutX="18.0" layoutY="37.0" text="Login :" textFill="#650202" />
+      <Label layoutX="159.0" layoutY="37.0" text="Hasło :" textFill="#650202" />
+      <TextField fx:id="textDatabase" layoutX="18.0" layoutY="106.0" prefHeight="25.0" prefWidth="468.0" promptText="baza danych" />
+      <Button fx:id="buttonDatabaseChoose" layoutX="500.0" layoutY="106.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="70.0" text="Wybierz ..." />
+      <Separator layoutX="-3.0" layoutY="139.0" prefHeight="17.0" prefWidth="597.0" />
+      <Label layoutX="18.0" layoutY="156.0" text="Ustawienia importu  wartości domyślne" textFill="#1e1aff" visible="false">
+         <font>
+            <Font name="System Bold" size="14.0" />
+         </font>
+      </Label>
+      <VBox layoutX="18.0" layoutY="182.0" prefHeight="200.0" prefWidth="152.0" visible="false">
+         <children>
+            <Label prefHeight="20.0" prefWidth="153.0" text="IdCechaNazwaInternetowa">
+               <VBox.margin>
+                  <Insets bottom="15.0" />
+               </VBox.margin>
+            </Label>
+            <Label prefHeight="17.0" prefWidth="152.0" text="IdRodzajKartoteki">
+               <VBox.margin>
+                  <Insets bottom="15.0" />
+               </VBox.margin>
+            </Label>
+            <Label prefHeight="17.0" prefWidth="153.0" text="Login :">
+               <VBox.margin>
+                  <Insets bottom="15.0" />
+               </VBox.margin>
+            </Label>
+            <Label prefHeight="17.0" prefWidth="156.0" text="Login :">
+               <VBox.margin>
+                  <Insets bottom="15.0" />
+               </VBox.margin>
+            </Label>
+            <Label prefHeight="17.0" prefWidth="152.0" text="Login :">
+               <VBox.margin>
+                  <Insets bottom="15.0" />
+               </VBox.margin>
+            </Label>
+         </children>
+      </VBox>
+      <TextField layoutX="180.0" layoutY="181.0" prefHeight="17.0" prefWidth="125.0" visible="false">
+         <font>
+            <Font size="10.0" />
+         </font>
+      </TextField>
+      <TextField layoutX="180.0" layoutY="213.0" prefHeight="17.0" prefWidth="125.0" visible="false">
+         <font>
+            <Font size="10.0" />
+         </font>
+      </TextField>
+      <TextField layoutX="180.0" layoutY="245.0" prefHeight="17.0" prefWidth="125.0" visible="false">
+         <font>
+            <Font size="10.0" />
+         </font>
+      </TextField>
+      <TextField layoutX="180.0" layoutY="277.0" prefHeight="17.0" prefWidth="125.0" visible="false">
+         <font>
+            <Font size="10.0" />
+         </font>
+      </TextField>
+      <TextField layoutX="180.0" layoutY="310.0" prefHeight="17.0" prefWidth="125.0" visible="false">
+         <font>
+            <Font size="10.0" />
+         </font>
+      </TextField>
+      <TextField layoutX="445.0" layoutY="181.0" prefHeight="17.0" prefWidth="125.0" visible="false">
+         <font>
+            <Font size="10.0" />
+         </font>
+      </TextField>
+      <TextField layoutX="445.0" layoutY="213.0" prefHeight="17.0" prefWidth="125.0" visible="false">
+         <font>
+            <Font size="10.0" />
+         </font>
+      </TextField>
+      <TextField layoutX="445.0" layoutY="245.0" prefHeight="17.0" prefWidth="125.0" visible="false">
+         <font>
+            <Font size="10.0" />
+         </font>
+      </TextField>
+      <TextField layoutX="445.0" layoutY="277.0" prefHeight="17.0" prefWidth="125.0" visible="false">
+         <font>
+            <Font size="10.0" />
+         </font>
+      </TextField>
+      <TextField layoutX="445.0" layoutY="310.0" prefHeight="17.0" prefWidth="125.0" visible="false">
+         <font>
+            <Font size="10.0" />
+         </font>
+      </TextField>
+      <VBox layoutX="331.0" layoutY="183.0" prefHeight="151.0" prefWidth="113.0" visible="false">
+         <children>
+            <Label prefHeight="17.0" prefWidth="116.0" text="Login :">
+               <VBox.margin>
+                  <Insets bottom="15.0" />
+               </VBox.margin>
+            </Label>
+            <Label prefHeight="17.0" prefWidth="114.0" text="Login :">
+               <VBox.margin>
+                  <Insets bottom="15.0" />
+               </VBox.margin>
+            </Label>
+            <Label prefHeight="17.0" prefWidth="115.0" text="Login :">
+               <VBox.margin>
+                  <Insets bottom="15.0" />
+               </VBox.margin>
+            </Label>
+            <Label prefHeight="17.0" prefWidth="115.0" text="Login :">
+               <VBox.margin>
+                  <Insets bottom="15.0" />
+               </VBox.margin>
+            </Label>
+            <Label prefHeight="17.0" prefWidth="36.0" text="Login :">
+               <VBox.margin>
+                  <Insets bottom="15.0" />
+               </VBox.margin>
+            </Label>
+         </children>
+      </VBox>
+      <Label layoutX="303.0" layoutY="37.0" text="Lokalizacja bazy systemowej :" textFill="#650202" />
+      <TextField fx:id="textSystemDatabase" layoutX="302.0" layoutY="54.0" prefHeight="25.0" prefWidth="184.0" promptText="baza danych" />
+      <Button fx:id="buttonSystemDatabaseChoose" layoutX="500.0" layoutY="54.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="70.0" text="Wybierz ..." />
+   </children>
+</AnchorPane>

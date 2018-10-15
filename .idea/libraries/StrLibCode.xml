@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="StrLibCode">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib/StrLibCode.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

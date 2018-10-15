@@ -1,0 +1,16 @@
+.mnemonic-underline {
+    -fx-stroke: -fx-text-base-color;
+}
+#menuDatabaseConnection > .menuItem {
+    -fx-graphic: url("file:logo.png");
+}
+.red-button {
+    -fx-background-color: red;
+}
+
+.white-button {
+    -fx-background-color: green;
+}
+.toggle-button:selected {
+    -fx-background-color: green;
+}
