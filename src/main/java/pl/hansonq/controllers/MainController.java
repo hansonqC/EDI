@@ -44,10 +44,9 @@ import pl.hansonq.utils.Utils;
 import javax.swing.*;
 import java.io.*;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
-import java.util.ResourceBundle;
+import java.sql.Time;
+import java.util.*;
+import java.util.Timer;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -148,7 +147,7 @@ public class MainController implements Initializable, Runnable {
 
     private void Start() {
         if (Job()) {
-       //     Odswiez();
+            //  PowiazPz(listOfDocumentsToConnect);
         }
     }
 
@@ -156,27 +155,34 @@ public class MainController implements Initializable, Runnable {
         progressBar.setProgress(0.0d);
         buttonImport.setDisable(true);
         loadButton.setDisable(true);
+        Timer timer = new Timer();
+        TimerTask timerTask = new TimerTask() {
+            @Override
+            public void run() {
+                buttonImport.setDisable(true);
+                PowiazPz(listOfDocumentsToConnect);
+                JOptionPane.showMessageDialog(null, "Pliki EDI zostały zaimportowane poprawnie !", "Import EDI INTER-ELEKTRO", JOptionPane.INFORMATION_MESSAGE);
+                buttonImport.setDisable(false);
+            }
+        };
+
         Runnable runnable1 = new Runnable() {
             @Override
             public void run() {
-                wypychacz();
                 Odswiez();
+                if (wypychacz()) {
+                    timer.schedule(timerTask, 4000l);
+                }
+
             }
         };
-        Runnable runnable2 = new Runnable() {
-            @Override
-            public void run() {
-                PowiazPz(listOfDocumentsToConnect);
-            }
-        };
+
         task = new Task<Void>() {
             @Override
             public Void call() {
                 Run();
                 task.cancel();
                 Platform.runLater(runnable1);
-              //  Odswiez();
-                // progressBar.setProgress(0.0d);
                 return null;
             }
 
@@ -229,6 +235,7 @@ public class MainController implements Initializable, Runnable {
                 InvoiceModel invoiceModel;// = new InvoiceModel();
                 CartModelEdi cartModelEdi; //= new CartModelEdi();
                 String nip1 = documentInvoiceModel.getInvoicePartiesModel().getSellerModel().getTaxID();
+                String poNip = (nip1.replace("PL", "")).replace("-", "");
                 String iln1 = documentInvoiceModel.getInvoicePartiesModel().getSellerModel().getILN();
                 // String nazwapliku = xmlFile. //invoices.get(listOfXml.indexOf(documentInvoiceModel));
                 int idKontrah = 0;
@@ -239,13 +246,20 @@ public class MainController implements Initializable, Runnable {
                 String invoiceNumber = documentInvoiceModel.getHeaderModel().getInvoiceNumber();
                 //    JOptionPane.showMessageDialog(null, invoiceNumber);
                 if (documentInvoiceDao.CheckIfDocumentExists(invoiceNumber)) {
-                    JOptionPane.showMessageDialog(null, "Dokument o numerze: " + invoiceNumber + " był już importowany !\nPlik : " + fileName, "Błąd import", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(null, "Dokument o numerze: " + invoiceNumber + " był już importowany !\nPlik : " + fileName, "Błąd importu", JOptionPane.ERROR_MESSAGE);
                     //  Odswiez();
                     continue;
 
                 }
-                if (documentInvoiceDao.getKontrah(nip1, iln1) != null) {
-                    seller = documentInvoiceDao.getKontrah(nip1, iln1);
+
+                if (documentInvoiceDao.getKontrah(poNip, iln1) != null) {
+                    seller = documentInvoiceDao.getKontrah(poNip, iln1);
+                } else if (documentInvoiceDao.getKontrah(poNip, iln1) == null) {
+                    seller = documentInvoiceDao.getKontrahILN(poNip, iln1);
+
+                } else if (documentInvoiceDao.getKontrahILN(poNip, iln1) == null) {
+                    JOptionPane.showMessageDialog(null, "Nie odnaleziono kontrahenta dla dokumentu " + invoiceNumber + "\nPlik : " + fileName, "Błąd importu", JOptionPane.ERROR_MESSAGE);
+                    continue;
                 }
                 idKontrah = seller.get(0);
                 nrKontrah = seller.get(1);
@@ -269,7 +283,9 @@ public class MainController implements Initializable, Runnable {
                     cartModelEdi.setNetPice(line.getLineItemModel().getInvoiceUnitNetPrice());
                     cartModelEdi.setQuantity(line.getLineItemModel().getInvoiceQuantity());
                     cartModelEdi.setKartName(line.getLineItemModel().getItemDescription());
-                    cartModelEdi.setZamdostNumber(line.getLineOrderModel().getBuyerOrderNumber());
+                    String zamdost = line.getLineOrderModel().getBuyerOrderNumber();
+                    String poZamdost = zamdost.replace("ZAMDOST ", "");
+                    cartModelEdi.setZamdostNumber(poZamdost);
                     if (line.getLineItemModel().getProductFeeDetailsModel() == null) {
                         cartModelEdi.setNetPice(line.getLineItemModel().getInvoiceUnitNetPrice());
                     } else {
@@ -367,7 +383,7 @@ public class MainController implements Initializable, Runnable {
                 //  JOptionPane.showMessageDialog(null, cartModelEdi.getZamdostNumber());
                 idPz = dao.GetIdNaglPZ(invoiceModels.get(invoiceModels.indexOf(item)).getInvoiceNumber());
                 idZamDost = dao.GetIdNaglZAMDOST(cartModelEdi.getZamdostNumber(), item.getIdKontrah());
-                JOptionPane.showMessageDialog(null, "PZ: " + idPz + "\n" + "ZAMDOST: " + idZamDost);
+                JOptionPane.showMessageDialog(null, "PZ: " + item.getFileName() + "; " + idPz + "\n" + "ZAMDOST: " + cartModelEdi.getZamdostNumber() + "; " + idZamDost);
 
 
             }

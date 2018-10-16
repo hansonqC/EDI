@@ -13,6 +13,7 @@ public interface DocumentInvoiceDao {
     boolean ImportPz(DocumentInvoiceModel documentInvoiceModel);
     public List<String> getZamdost();
     public List<Integer> getKontrah(String nip, String iln);
+    public List<Integer>getKontrahILN(String nip, String iln);
     public boolean CheckIfExist(DocumentInvoiceModel documentInvoiceModel);
     public int GetKartId(String ean);
     int ImportPzNagl(InvoiceModel invoiceModel);

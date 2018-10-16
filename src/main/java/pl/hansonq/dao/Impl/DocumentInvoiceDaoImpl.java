@@ -130,6 +130,58 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
 
     }
 
+    @Override
+    public List<Integer> getKontrahILN(String nip, String iln) {
+        PreparedStatement statement2 = null;
+        List<Integer> lista = new ArrayList<>();
+        int idKontrah = 0;
+        int nrKontrah = 0;
+        int[] kontrah = null;
+        try {
+            conect.setAutoCommit(true);
+            //   conn.connectionTest();
+            statement2 = conect.prepareStatement("select K.ID_KONTRAH, K.NRKONTRAH\n" +
+                    "from KONTRAH K\n" +
+                    "join DANEKONTRAH DK on DK.ID_KONTRAH = K.ID_KONTRAH\n" +
+                    "\n" +
+                    "where K.BAZAKONTRAH = 0 and\n" +
+                    "      DK.BAZADANEKONTRAH = 1 and\n" +
+                    "      K.GLOBALNRLOKALIZ  = trim(replace(?, '-', ''))");
+            statement2.setString(1, iln);
+            ResultSet rs2 = statement2.executeQuery();
+            //  statement2.close();
+            while (rs2.next()) {
+                idKontrah = rs2.getInt(1);
+                nrKontrah = rs2.getInt(2);
+                lista.add(idKontrah);
+                lista.add(nrKontrah);
+            }
+            return lista;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            logger.debug(e.getMessage());
+            return null;
+            //Utils.createSimpleDialog("Błąd importu danych", "", "Błąd podczas usuwania kartoteki o indeksie "+cartModel.getIndeks()+", komunikat błędu :\n" + e.getMessage(), Alert.AlertType.ERROR);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.debug(e.getMessage());
+            // Utils.createSimpleDialog("Błąd importu danych", "", "Błąd podczas usuwania kartoteki o indeksie "+cartModel.getIndeks()+", komunikat błędu :\n" + e.getMessage(), Alert.AlertType.ERROR);
+            //  return false;
+            return null;
+        } finally {
+            try {
+                statement2.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+                logger.debug(e.getMessage());
+            }
+            return lista;
+        }
+
+
+    }
+
     // Sprawdza czy dokument
     @Override
     public boolean CheckIfExist(DocumentInvoiceModel documentInvoiceModel) {
@@ -354,9 +406,9 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
 //        9 - inny nieznany błąd
     @Override
     public int ImportPzPoz(InvoiceModel invoiceModel, CartModelEdi cartModelEdi, int id_urzzewnagl) {
-       int id_Nagl=0;
+        int id_Nagl = 0;
         int id_poz = 0;
-        int blad=0;
+        int blad = 0;
         try {
             CallableStatement statement = conect.prepareCall("{call XXX_LC_URZZEWPOZ_ADD_9(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)}");
 
@@ -424,7 +476,7 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
     public boolean PowiazPZ(InvoiceModel invoiceModel, OrderModel orderModel) {
 
         try {
-           // CallableStatement statement = conect.prepareCall("{call XXX_LC_EDI_UTWORZPOW(?,?)}");
+            // CallableStatement statement = conect.prepareCall("{call XXX_LC_EDI_UTWORZPOW(?,?)}");
             JOptionPane.showMessageDialog(null, "LOL");
             return true;
 
@@ -598,7 +650,7 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
         int idUrzZewX = GetUrzzewId(urzzewCode);
         //    JOptionPane.showMessageDialog(null, idUrzZewX);
         //   int[] kontrah = null;
-      //  JOptionPane.showMessageDialog(null, idUrzZewX);
+        //  JOptionPane.showMessageDialog(null, idUrzZewX);
         try {
             conect.setAutoCommit(true);
             //   conn.connectionTest();
@@ -649,12 +701,12 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
         PreparedStatement statement2 = null;
         try {
             conect.setAutoCommit(true);
-             statement2 = conect.prepareStatement("select N.ID_NAGL\n" +
+            statement2 = conect.prepareStatement("select N.ID_NAGL\n" +
                     "from NAGL N\n" +
                     "where N.NRDOKZEW=?");
             statement2.setString(1, nrdok);
             ResultSet rs = statement2.executeQuery();
-             while (rs.next()) {
+            while (rs.next()) {
                 return true;
                 //   JOptionPane.showMessageDialog(null, nrdok2);
 
@@ -690,7 +742,7 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
     @Override
     public int GetUrzzewId(String code) {
         PreparedStatement statement2 = null;
-        int id_Urzzew =0;
+        int id_Urzzew = 0;
         try {
             conect.setAutoCommit(true);
             //   conn.connectionTest();
@@ -702,7 +754,6 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
 
             if (rs.next()) {
                 id_Urzzew = rs.getInt(1);
-
 
 
             }
@@ -793,7 +844,6 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
             }
 
 
-
         } catch (SQLException e) {
             e.printStackTrace();
             logger.debug(e.getMessage());
@@ -821,8 +871,9 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
             //   conn.connectionTest();
             statement2 = conect.prepareStatement("select N.ID_NAGL\n" +
                     "from NAGL N\n" +
-                    "where N.NRDOKWEW LIKE ? and N.ID_KONTRAH=?");// trim(replace(?, '-', ''))");
-            statement2.setString(1, "('"+number+"%')");
+                    "where N.NRDOKWEW LIKE ? and N.ID_KONTRAH=? and \n" +
+                    "      extract(year from N.DATADOK) = 2018");// trim(replace(?, '-', ''))");
+            statement2.setString(1, number + "%");
             statement2.setInt(2, idKontrah);
             ResultSet rs = statement2.executeQuery();
             // statement2.close();
@@ -857,7 +908,7 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
 //        }
 
         }
-      //  return id_nagl;
+        //  return id_nagl;
     }
 }
 
