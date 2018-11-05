@@ -105,6 +105,8 @@ public class JaxB {
         return null;
     }
 
+
+
 //    public static KatalogModel jaxbKatalogXMLToObject(String file) {
 //        try {
 //            JAXBContext context = JAXBContext.newInstance(KatalogModel.class);

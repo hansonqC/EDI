@@ -170,8 +170,14 @@
             <Font name="System Bold" size="12.0" />
          </font>
       </Label>
-      <ComboBox fx:id="magazyn" layoutX="239.0" layoutY="201.0" prefHeight="25.0" prefWidth="216.0" />
+      <ComboBox fx:id="magazyn" layoutX="239.0" layoutY="201.0" prefHeight="25.0" prefWidth="177.0" />
       <Label layoutX="239.0" layoutY="184.0" text="Magazyn :" textFill="WHITE">
+         <font>
+            <Font name="System Bold" size="12.0" />
+         </font>
+      </Label>
+      <TextField fx:id="textParametr" layoutX="444.0" layoutY="201.0" prefHeight="25.0" prefWidth="127.0" promptText="parametr w hamonogramie" />
+      <Label layoutX="444.0" layoutY="183.0" text="Harmonogram zadań :" textFill="WHITE">
          <font>
             <Font name="System Bold" size="12.0" />
          </font>

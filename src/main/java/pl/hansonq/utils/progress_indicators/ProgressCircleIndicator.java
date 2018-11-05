@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */ 
-package org.pdfsam.ui;
+package pl.hansonq.utils.progress_indicators;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -45,7 +45,7 @@ abstract class ProgressCircleIndicator extends Control {
     private ReadOnlyBooleanWrapper indeterminate = new ReadOnlyBooleanWrapper(false);
 
     public ProgressCircleIndicator() {
-        this.getStylesheets().add(ProgressCircleIndicator.class.getResource("circleprogress.css").toExternalForm());
+        this.getStylesheets().add(getClass().getClassLoader().getResource("circleprogress.css").toExternalForm());//ProgressCircleIndicator.class.getResource("circleprogress.css").toExternalForm());
     }
 
     public int getProgress() {

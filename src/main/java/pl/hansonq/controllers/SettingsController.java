@@ -38,7 +38,7 @@ public class SettingsController implements Initializable {
     List<String> magazyny;
 
     @FXML
-    private TextField textLogin, textDatabase, textSerwer, textInvoicesPath, textUrzZew;
+    private TextField textLogin, textDatabase, textSerwer, textInvoicesPath, textUrzZew, textParametr;
     @FXML
     private PasswordField textPassword;
     @FXML
@@ -93,6 +93,7 @@ public class SettingsController implements Initializable {
         textInvoicesPath.setText(Settings.getListOfInvoices());
         textUrzZew.setText(Settings.getKodUrzZew());
         magazyn.setValue(Settings.getMagazyn());
+       textParametr.setText(Settings.getSystem());
         //  textSystemDatabase.setText(Settings.getSystemDatabase());
         // textDoc.setText(Settings.getDocPath());
         // textPicture.setText(Settings.getPicturesPath());
@@ -127,6 +128,7 @@ public class SettingsController implements Initializable {
             prop.setProperty("invoices", textInvoicesPath.getText());
             prop.setProperty("kodUrzZew", textUrzZew.getText());
             prop.setProperty("magazyn",magazyn.getValue().toString());
+            prop.setProperty("system",textParametr.getText());
 
 
             // OPCJE FTP

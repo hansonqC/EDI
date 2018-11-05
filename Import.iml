@@ -15,6 +15,13 @@
     <orderEntry type="library" name="Maven: org.firebirdsql.jdbc:jaybird-jdk18:3.0.3" level="project" />
     <orderEntry type="library" name="Maven: javax.resource:connector-api:1.5" level="project" />
     <orderEntry type="library" name="Maven: org.antlr:antlr4-runtime:4.7" level="project" />
+    <orderEntry type="library" name="Maven: com.jcabi:jcabi-xml:0.21.4" level="project" />
+    <orderEntry type="library" name="Maven: com.jcabi:jcabi-log:0.17.2" level="project" />
+    <orderEntry type="library" name="Maven: com.jcabi:jcabi-aspects:0.22" level="project" />
+    <orderEntry type="library" name="Maven: org.aspectj:aspectjrt:1.8.4" level="project" />
+    <orderEntry type="library" name="Maven: javax.validation:validation-api:1.1.0.Final" level="project" />
+    <orderEntry type="library" name="Maven: com.jcabi:jcabi-immutable:1.4" level="project" />
+    <orderEntry type="library" name="Maven: org.cactoos:cactoos:0.20" level="project" />
     <orderEntry type="library" name="Maven: com.monitorjbl:xlsx-streamer:1.2.1" level="project" />
     <orderEntry type="library" name="Maven: org.apache.poi:poi-ooxml:3.17" level="project" />
     <orderEntry type="library" name="Maven: org.apache.poi:poi:3.17" level="project" />

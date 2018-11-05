@@ -6,6 +6,7 @@ import javafx.scene.control.Alert;
 import org.apache.log4j.Logger;
 import org.apache.log4j.xml.DOMConfigurator;
 
+import javax.swing.*;
 import java.io.*;
 import java.util.Properties;
 
@@ -25,6 +26,7 @@ public class Settings {
     private static String listOfInvoices;
     private static String kodUrzZew;
     private static String magazyn;
+    private static String system;
 
 
 
@@ -152,7 +154,13 @@ public class Settings {
     final static Logger logger = Logger.getLogger(Settings.class);
 
 
+    public static String getSystem() {
+        return system;
+    }
 
+    public static void setSystem(String system) {
+        Settings.system = system;
+    }
 
     public static void loadSettings() {
         Properties prop = new Properties();
@@ -178,6 +186,7 @@ public class Settings {
             Settings.setListOfInvoices(prop.getProperty("invoices"));
             Settings.setKodUrzZew(prop.getProperty("kodUrzZew"));
             Settings.setMagazyn(prop.getProperty("magazyn"));
+           Settings.setSystem(prop.getProperty("system"));
 
 
             //  Settings.setLastVisitedDirectory(prop.getProperty("lastVisitedDirectory"));
@@ -185,6 +194,7 @@ public class Settings {
 
 
         } catch (Exception ex) {
+            JOptionPane.showMessageDialog(null, "Błąd odczytu ustawień","EDI INTER-ELEKTRO",JOptionPane.ERROR_MESSAGE);
             Utils.createSimpleDialog("Odczyt danych", "", "Błąd odczytu ustawień !", Alert.AlertType.ERROR);
 
 

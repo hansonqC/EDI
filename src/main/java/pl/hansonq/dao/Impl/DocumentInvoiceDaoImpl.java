@@ -35,18 +35,8 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
 
 
     @Override
-    public boolean ImportPz(DocumentInvoiceModel documentInvoiceModel) {
-        return false;
-    }
-
-    @Override
-    public List<String> getZamdost() {
-        return null;
-    }
-
-    @Override
     public List<Integer> getKontrah(String nip, String iln) {
-        PreparedStatement statement2 = null;
+        CallableStatement statement2 = null;
         List<Integer> lista = new ArrayList<>();
         int idKontrah = 0;
         int nrKontrah = 0;
@@ -54,56 +44,18 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
         try {
             conect.setAutoCommit(true);
             //   conn.connectionTest();
-            statement2 = conect.prepareStatement("select K.ID_KONTRAH, K.NRKONTRAH\n" +
-                    "from KONTRAH K\n" +
-                    "join DANEKONTRAH DK on DK.ID_KONTRAH = K.ID_KONTRAH\n" +
-                    "where K.BAZAKONTRAH = 0 and\n" +
-                    "      DK.BAZADANEKONTRAH = 1 and\n" +
-                    "      DK.NIPW =?");// trim(replace(?, '-', ''))");
+            statement2 = conect.prepareCall("{call XXX_LC_EDI_GETKONTRAH(?,?,?,?)}");// trim(replace(?, '-', ''))");
+            statement2.registerOutParameter(3, Types.INTEGER);
+            statement2.registerOutParameter(4, Types.INTEGER);
             statement2.setString(1, nip);
-            ResultSet rs = statement2.executeQuery();
-            // statement2.close();
-            while (rs.next()) {
-                //  JOptionPane.showMessageDialog(null,"YYEYEYYEE");
-                idKontrah = rs.getInt(1);
-                nrKontrah = rs.getInt(2);
-                lista.add(idKontrah);
-                lista.add(nrKontrah);
-                //  JOptionPane.showMessageDialog(null, lista.size());
-                //  kontrah = new int[]{idKontrah, nrKontrah};
+            statement2.setString(2, iln);
+            statement2.execute();
+            idKontrah = statement2.getInt(3);
+            nrKontrah = statement2.getInt(4);
+            lista.add(idKontrah);
+            lista.add(nrKontrah);
 
-                // System.out.println(lista.get(0)+"  "+lista.get(1));
-
-
-            }
-
-
-//            if (rs.getInt(1) == 0) {
-//
-//                statement2 = conect.prepareStatement("select K.ID_KONTRAH, K.NRKONTRAH\n" +
-//                        "from KONTRAH K\n" +
-//                        "join DANEKONTRAH DK on DK.ID_KONTRAH = K.ID_KONTRAH\n" +
-//                        "\n" +
-//                        "where K.BAZAKONTRAH = 0 and\n" +
-//                        "      DK.BAZADANEKONTRAH = 1 and\n" +
-//                        "      K.GLOBALNRLOKALIZ  = trim(replace(?, '-', ''))");
-//                statement2.setString(1, iln);
-//                ResultSet rs2 = statement2.executeQuery();
-//                //  statement2.close();
-//                while (rs2.next()) {
-//                    idKontrah = rs.getInt(1);
-//                    nrKontrah = rs.getInt(2);
-//                    lista.add(idKontrah);
-//                    lista.add(nrKontrah);
-//                    // JOptionPane.showMessageDialog(null, lista.get(1));
-//                    //  kontrah = new int[]{idKontrah, nrKontrah};
-//
-//                    // System.out.println(lista.get(0)+"  "+lista.get(1));
-//
-//
-//                }
-//            }
-
+//JOptionPane.showMessageDialog(null, lista.get(0)+" "+ lista.get(1));
             return lista;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -130,63 +82,6 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
 
     }
 
-    @Override
-    public List<Integer> getKontrahILN(String nip, String iln) {
-        PreparedStatement statement2 = null;
-        List<Integer> lista = new ArrayList<>();
-        int idKontrah = 0;
-        int nrKontrah = 0;
-        int[] kontrah = null;
-        try {
-            conect.setAutoCommit(true);
-            //   conn.connectionTest();
-            statement2 = conect.prepareStatement("select K.ID_KONTRAH, K.NRKONTRAH\n" +
-                    "from KONTRAH K\n" +
-                    "join DANEKONTRAH DK on DK.ID_KONTRAH = K.ID_KONTRAH\n" +
-                    "\n" +
-                    "where K.BAZAKONTRAH = 0 and\n" +
-                    "      DK.BAZADANEKONTRAH = 1 and\n" +
-                    "      K.GLOBALNRLOKALIZ  = trim(replace(?, '-', ''))");
-            statement2.setString(1, iln);
-            ResultSet rs2 = statement2.executeQuery();
-            //  statement2.close();
-            while (rs2.next()) {
-                idKontrah = rs2.getInt(1);
-                nrKontrah = rs2.getInt(2);
-                lista.add(idKontrah);
-                lista.add(nrKontrah);
-            }
-            return lista;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            logger.debug(e.getMessage());
-            return null;
-            //Utils.createSimpleDialog("Błąd importu danych", "", "Błąd podczas usuwania kartoteki o indeksie "+cartModel.getIndeks()+", komunikat błędu :\n" + e.getMessage(), Alert.AlertType.ERROR);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            logger.debug(e.getMessage());
-            // Utils.createSimpleDialog("Błąd importu danych", "", "Błąd podczas usuwania kartoteki o indeksie "+cartModel.getIndeks()+", komunikat błędu :\n" + e.getMessage(), Alert.AlertType.ERROR);
-            //  return false;
-            return null;
-        } finally {
-            try {
-                statement2.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-                logger.debug(e.getMessage());
-            }
-            return lista;
-        }
-
-
-    }
-
-    // Sprawdza czy dokument
-    @Override
-    public boolean CheckIfExist(DocumentInvoiceModel documentInvoiceModel) {
-        return false;
-    }
 
     @Override
     public int GetKartId(String ean) {
@@ -292,9 +187,8 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
         LocalDateTime dateTime = LocalDateTime.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         String timestamp = dateTime.format(formatter);
-        //  JOptionPane.showMessageDialog(null, timestamp);
         try {
-            CallableStatement statement = conect.prepareCall("{call XXX_LC_URZZEWNAGL_ADD_7(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,)}");
+            CallableStatement statement = conect.prepareCall("{call XXX_LC_EDI_URZZEWNAGL_ADD_7(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)}");
 
             statement.registerOutParameter(37, Types.INTEGER);
             statement.registerOutParameter(38, Types.INTEGER);
@@ -410,7 +304,7 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
         int id_poz = 0;
         int blad = 0;
         try {
-            CallableStatement statement = conect.prepareCall("{call XXX_LC_URZZEWPOZ_ADD_9(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)}");
+            CallableStatement statement = conect.prepareCall("{call XXX_LC_EDI_URZZEWPOZ_ADD_9(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)}");
 
             statement.registerOutParameter(25, Types.INTEGER);
             statement.registerOutParameter(26, Types.INTEGER);
@@ -446,7 +340,7 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
             try {
                 id_poz = statement.getInt(25);
                 blad = statement.getInt(26);
-                // JOptionPane.showMessageDialog(null,id_kartoteka+" ,"+"nowa :"+new_kart);
+             //    JOptionPane.showMessageDialog(null,id_poz+" ,"+blad);
 
 
             } catch (Exception ex) {
@@ -473,17 +367,20 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
     }
 
     @Override
-    public boolean PowiazPZ(InvoiceModel invoiceModel, OrderModel orderModel) {
+    public boolean PowiazPZ(int zam, int pz) {
 
         try {
-            // CallableStatement statement = conect.prepareCall("{call XXX_LC_EDI_UTWORZPOW(?,?)}");
-            JOptionPane.showMessageDialog(null, "LOL");
+            conect.setAutoCommit(true);
+            CallableStatement statement = conect.prepareCall("{call XXX_LC_EDI_UTWORZPOW(?,?)}");
+            statement.setInt(1, zam);
+            statement.setInt(2, pz);
+            statement.executeUpdate();
             return true;
 
-//        } catch (SQLException ex) {
-//            ex.printStackTrace();
-//            logger.debug(ex.getMessage());
-//            //   JOptionPane.showMessageDialog(null, "Kartot eka o numerze " + id_kartoteka + " posiada nieuzupełnione wszystkie wymagane pola !", "Bład", JOptionPane.ERROR_MESSAGE);
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            logger.debug(ex.getMessage());
+            //   JOptionPane.showMessageDialog(null, "Kartot eka o numerze " + id_kartoteka + " posiada nieuzupełnione wszystkie wymagane pola !", "Bład", JOptionPane.ERROR_MESSAGE);
         } catch (NullPointerException ex) {
             logger.debug(ex.getMessage());
             ex.printStackTrace();
@@ -538,44 +435,16 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
 
     @Override
     public String GetKartIndeks(String ean) {
-        PreparedStatement statement2 = null;
-        //PreparedStatement statement3 = null;
+        CallableStatement statement2 = null;
         String indeks = "";
-        //   int[] kontrah = null;
         try {
             conect.setAutoCommit(true);
-            //   conn.connectionTest();
-            statement2 = conect.prepareStatement("select K.INDEKS\n" +
-                    "from KARTOTEKA K\n" +
-                    "left join EAN E on E.ID_KARTOTEKA = K.ID_KARTOTEKA\n" +
-                    "where E.EAN =?");// trim(replace(?, '-', ''))");
+            statement2 = conect.prepareCall("{call XXX_LC_EDI_GETKARTINDEKS (?,?)}");// trim(replace(?, '-', ''))");
+            statement2.registerOutParameter(2, Types.VARCHAR);
             statement2.setString(1, ean);
-            ResultSet rs = statement2.executeQuery();
-            // statement2.close();
-            //statement2 = null;
-
-            while (rs.next()) {
-                ///   JOptionPane.showMessageDialog(null,indeks);
-                indeks = rs.getString(1);
-            }
-            if ((indeks.equals("")) || (indeks.isEmpty()) || (indeks == null)) {
-                statement2 = conect.prepareStatement("select K.INDEKS\n" +
-                        "from KARTOTEKA K\n" +
-                        "where K.INDEKS =?");// trim(replace(?, '-', ''))");
-                statement2.setString(1, ean.trim());
-                ResultSet rs2 = statement2.executeQuery();
-                // statement2 = null;
-                while (rs2.next()) {
-                    ///   JOptionPane.showMessageDialog(null,indeks);
-                    String indeks2 = rs2.getString(1);
-
-                    return indeks2;
-                }
-            } else {
-                return indeks;
-            }
-
-
+             statement2.execute();
+            indeks = statement2.getString(2);
+            return indeks;
         } catch (SQLException e) {
             e.printStackTrace();
             logger.debug(e.getMessage());
@@ -597,7 +466,7 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
             }
             // return indeks;
         }
-        return null;
+
     }
 
     @Override
@@ -769,7 +638,7 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
             logger.debug(e.getMessage());
 
         }
-        return id_Urzzew;
+       return id_Urzzew;
     }
 
     @Override
@@ -824,26 +693,18 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
 
     @Override
     public int GetIdNaglPZ(String number) {
-        PreparedStatement statement2 = null;
+        CallableStatement statement2 = null;
         int id_nagl = 0;
 
         try {
             conect.setAutoCommit(true);
             //   conn.connectionTest();
-            statement2 = conect.prepareStatement("select N.ID_NAGL\n" +
-                    "from NAGL N\n" +
-                    "where N.NRDOKZEW = ? and\n" +
-                    "      N.DATADOK = current_date  ");// trim(replace(?, '-', ''))");
+            statement2 = conect.prepareCall("{call XXX_LC_EDI_GETPZ(?,?)}");
+            statement2.registerOutParameter(2, Types.INTEGER);// trim(replace(?, '-', ''))");
             statement2.setString(1, number);
-            ResultSet rs = statement2.executeQuery();
-            // statement2.close();
-            while (rs.next()) {
-                id_nagl = rs.getInt(1);
-
-
-            }
-
-
+            statement2.execute();
+            id_nagl = statement2.getInt(2);
+            return id_nagl;
         } catch (SQLException e) {
             e.printStackTrace();
             logger.debug(e.getMessage());
@@ -863,26 +724,19 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
 
     @Override
     public int GetIdNaglZAMDOST(String number, int idKontrah) {
-        PreparedStatement statement2 = null;
+        CallableStatement statement2 = null;
         int id_nagl = 0;
 
         try {
             conect.setAutoCommit(true);
             //   conn.connectionTest();
-            statement2 = conect.prepareStatement("select N.ID_NAGL\n" +
-                    "from NAGL N\n" +
-                    "where N.NRDOKWEW LIKE ? and N.ID_KONTRAH=? and \n" +
-                    "      extract(year from N.DATADOK) = 2018");// trim(replace(?, '-', ''))");
-            statement2.setString(1, number + "%");
+            statement2 = conect.prepareCall("{call XXX_LC_EDI_GETZAMDOST(?,?,?)}");
+            statement2.registerOutParameter(3, Types.INTEGER);// trim(replace(?, '-', ''))");
+            statement2.setString(1, number);
             statement2.setInt(2, idKontrah);
             ResultSet rs = statement2.executeQuery();
-            // statement2.close();
-            while (rs.next()) {
-                id_nagl = rs.getInt(1);
-
-                //   JOptionPane.showMessageDialog(null, nrdok2);
-
-            }
+            statement2.execute();
+            id_nagl = statement2.getInt(3);
             return id_nagl;
 
         } catch (SQLException e) {

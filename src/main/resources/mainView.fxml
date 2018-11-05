@@ -9,6 +9,7 @@
 <?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.ProgressBar?>
 <?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.input.KeyCodeCombination?>
@@ -97,9 +98,11 @@
                   <Font name="System Bold" size="10.0" />
                </font>
             </Button>
+            <Button fx:id="b" disable="true" layoutX="330.0" layoutY="169.0" mnemonicParsing="false" text="Button" visible="false" />
          </children>
       </AnchorPane>
       <TextArea fx:id="textArea2" layoutX="9.0" layoutY="94.0" prefHeight="373.0" prefWidth="679.0" AnchorPane.leftAnchor="9.0" AnchorPane.rightAnchor="8.0" AnchorPane.topAnchor="94.0" />
-      <ListView fx:id="listOfDocuments" layoutX="9.0" layoutY="46.0" prefHeight="421.0" prefWidth="483.0" style="-fx-background-color: lightblue;" AnchorPane.leftAnchor="9.0" AnchorPane.rightAnchor="8.0" />
+      <ListView fx:id="listOfDocuments" disable="true" layoutX="9.0" layoutY="55.0" prefHeight="421.0" prefWidth="483.0" style="-fx-background-color: lightblue;" visible="false" AnchorPane.leftAnchor="9.0" AnchorPane.rightAnchor="8.0" />
+      <TableView fx:id="table" layoutX="9.0" layoutY="94.0" prefHeight="373.0" prefWidth="483.0" />
    </children>
 </AnchorPane>

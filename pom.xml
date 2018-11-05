@@ -60,6 +60,12 @@
             <version>3.0.3</version>
 
         </dependency>
+        <!-- https://mvnrepository.com/artifact/com.jcabi/jcabi-xml -->
+        <dependency>
+            <groupId>com.jcabi</groupId>
+            <artifactId>jcabi-xml</artifactId>
+            <version>0.21.4</version>
+        </dependency>
         <!-- https://mvnrepository.com/artifact/com.monitorjbl/xlsx-streamer -->
         <dependency>
             <groupId>com.monitorjbl</groupId>
