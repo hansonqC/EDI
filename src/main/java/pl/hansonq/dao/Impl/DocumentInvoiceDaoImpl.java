@@ -234,7 +234,7 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
             try {
                 id_nagl = statement.getInt(37);
                 blad = statement.getInt(38);
-                // JOptionPane.showMessageDialog(null,id_kartoteka+" ,"+"nowa :"+new_kart);
+           //     JOptionPane.showMessageDialog(null, id_nagl);
 
 
             } catch (Exception ex) {
@@ -340,8 +340,7 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
             try {
                 id_poz = statement.getInt(25);
                 blad = statement.getInt(26);
-             //    JOptionPane.showMessageDialog(null,id_poz+" ,"+blad);
-
+             //   JOptionPane.showMessageDialog(null, id_poz);
 
             } catch (Exception ex) {
                 ex.printStackTrace();
@@ -435,15 +434,14 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
 
     @Override
     public String GetKartIndeks(String ean) {
-        CallableStatement statement2 = null;
         String indeks = "";
         try {
             conect.setAutoCommit(true);
-            statement2 = conect.prepareCall("{call XXX_LC_EDI_GETKARTINDEKS (?,?)}");// trim(replace(?, '-', ''))");
-            statement2.registerOutParameter(2, Types.VARCHAR);
+            CallableStatement statement2 = conect.prepareCall("{call XXX_LC_EDI_GETKARTINDEKS(?)}");// trim(replace(?, '-', ''))");
+            statement2.registerOutParameter(1, Types.VARCHAR);
             statement2.setString(1, ean);
-             statement2.execute();
-            indeks = statement2.getString(2);
+            statement2.execute();
+            indeks = statement2.getString(1);
             return indeks;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -457,14 +455,6 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
             // Utils.createSimpleDialog("Błąd importu danych", "", "Błąd podczas usuwania kartoteki o indeksie "+cartModel.getIndeks()+", komunikat błędu :\n" + e.getMessage(), Alert.AlertType.ERROR);
             //  return false;
             return null;
-        } finally {
-            try {
-                statement2.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-                logger.debug(e.getMessage());
-            }
-            // return indeks;
         }
 
     }
@@ -565,6 +555,7 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
         return false;
     }
 
+
     @Override
     public boolean CheckIfDocumentExists2(String nrdok) {
         PreparedStatement statement2 = null;
@@ -638,7 +629,7 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
             logger.debug(e.getMessage());
 
         }
-       return id_Urzzew;
+        return id_Urzzew;
     }
 
     @Override
@@ -693,17 +684,18 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
 
     @Override
     public int GetIdNaglPZ(String number) {
-        CallableStatement statement2 = null;
+        //  JOptionPane.showMessageDialog(null, number);
+
         int id_nagl = 0;
 
         try {
             conect.setAutoCommit(true);
             //   conn.connectionTest();
-            statement2 = conect.prepareCall("{call XXX_LC_EDI_GETPZ(?,?)}");
-            statement2.registerOutParameter(2, Types.INTEGER);// trim(replace(?, '-', ''))");
+            CallableStatement statement2 = conect.prepareCall("{call XXX_LC_EDI_GETPZ(?)}");
+            statement2.registerOutParameter(1, Types.INTEGER);// trim(replace(?, '-', ''))");
             statement2.setString(1, number);
             statement2.execute();
-            id_nagl = statement2.getInt(2);
+            id_nagl = statement2.getInt(1);
             return id_nagl;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -734,7 +726,7 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
             statement2.registerOutParameter(3, Types.INTEGER);// trim(replace(?, '-', ''))");
             statement2.setString(1, number);
             statement2.setInt(2, idKontrah);
-            ResultSet rs = statement2.executeQuery();
+            //ResultSet rs = statement2.executeQuery();
             statement2.execute();
             id_nagl = statement2.getInt(3);
             return id_nagl;
@@ -742,7 +734,7 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
         } catch (SQLException e) {
             e.printStackTrace();
             logger.debug(e.getMessage());
-            return 0;
+            // return 0;
             //Utils.createSimpleDialog("Błąd importu danych", "", "Błąd podczas usuwania kartoteki o indeksie "+cartModel.getIndeks()+", komunikat błędu :\n" + e.getMessage(), Alert.AlertType.ERROR);
 
         } catch (Exception e) {
@@ -750,7 +742,7 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
             logger.debug(e.getMessage());
             // Utils.createSimpleDialog("Błąd importu danych", "", "Błąd podczas usuwania kartoteki o indeksie "+cartModel.getIndeks()+", komunikat błędu :\n" + e.getMessage(), Alert.AlertType.ERROR);
             //  return false;
-            return 0;
+            // return 0;
 //        } finally {
 //            try {
 //                statement2.close();
@@ -762,7 +754,7 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
 //        }
 
         }
-        //  return id_nagl;
+        return id_nagl;
     }
 }
 

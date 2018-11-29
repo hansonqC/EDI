@@ -97,11 +97,11 @@ public class MainController implements Initializable {
     private ListView<String> listOfDocuments;
 
     @FXML
-    private MenuItem menuDatabaseSettings, menuOprogramie, menuTestConnection, menuClose;
+    private MenuItem menuDatabaseSettings, menuOprogramie, menuTestConnection, menuClose, emailButton;
     @FXML
     MenuBar menuBar;
-    @FXML
-    private TextArea textArea, textArea2;
+    //    @FXML
+//    private TextArea textArea, textArea2;
     @FXML
     Label labelVersion;
     @FXML
@@ -114,7 +114,7 @@ public class MainController implements Initializable {
     private TextField textFileImport;
     @FXML
     private ProgressBar progressBar;
-    final static String version = "4.0.0.1";
+    final static String version = "4.0.0.2";
     final static Logger logger = Logger.getLogger(MainController.class);
 
     public MainController() {
@@ -126,7 +126,7 @@ public class MainController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         executorService = Executors.newSingleThreadExecutor();
-        textArea2.setEditable(false);
+        //textArea2.setEditable(false);
         menuTestConnection.setOnAction(e -> testConnection());
         menuOprogramie.setOnAction(e -> about());
         menuDatabaseSettings.setOnAction(e -> settingsOpen());
@@ -139,6 +139,7 @@ public class MainController implements Initializable {
         invoices = new ArrayList<String>();
         listOfXml = new ArrayList<>();
         listOfNumbers = new ArrayList<>();
+        //  emailButton.setOnAction(e->email());
 
         try {
             DOMConfigurator.configure("log4j.xml");
@@ -181,6 +182,26 @@ public class MainController implements Initializable {
 
 
     }
+
+//    private void email() {
+//
+//        Parent root2 = null;
+//        try {
+//            root2 = FXMLLoader.load(getClass().getClassLoader().getResource("login.fxml"));
+//            Stage secondStage = new Stage();
+//            secondStage.setTitle("E-MAIL");
+//            secondStage.getIcons().add(new Image(getClass().getClassLoader().getResourceAsStream("logo.png")));//("file:logo.png"));
+//            secondStage.setResizable(false);
+//            secondStage.initStyle(StageStyle.DECORATED);
+//            // secondStage.centerOnScreen();
+//            secondStage.setScene(new Scene(root2, 300, 300));
+//            secondStage.show();
+//        } catch (IOException e) {
+//            logger.debug(e.getMessage());
+//            e.printStackTrace();
+//        }
+//
+//    }
 
     // wypełanianie tabeli
     private void FillTable() {
@@ -246,7 +267,7 @@ public class MainController implements Initializable {
         //   ProgressIndicator();
         //  PowiazPz(listOfDocumentsToConnect);
         //  } else {
-    //    JOptionPane.showMessageDialog(null, "Nie zaznaczono żadnego pliku !", "Błąd importu", JOptionPane.ERROR_MESSAGE);
+        //    JOptionPane.showMessageDialog(null, "Nie zaznaczono żadnego pliku !", "Błąd importu", JOptionPane.ERROR_MESSAGE);
         //  }
     }
 
@@ -271,9 +292,13 @@ public class MainController implements Initializable {
         Runnable runnable1 = new Runnable() {
             @Override
             public void run() {
-                //   Odswiez();
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
                 if (wypychacz()) {
-                    timer.schedule(timerTask, 8000l);
+                    timer.schedule(timerTask, 10000l);
                 }
 
             }
@@ -298,14 +323,14 @@ public class MainController implements Initializable {
 
 
     private boolean Run() {
-       try {
+        try {
             ObservableList<RowModel> dataList = FXCollections.observableArrayList();
             for (RowModel bean : listOfFiles) {
                 if (bean.getSelect().isSelected()) {
                     invoices.add(bean.getXmlName());
                 }
             }
-            JOptionPane.showMessageDialog(null, invoices);
+            //   JOptionPane.showMessageDialog(null, invoices);
             listOfXml = LoadXml(invoices);
             listOfDocumentsToConnect = new ArrayList<>();
             listOfDocumentsToConnect = ImportPlikow(listOfXml);
@@ -355,11 +380,21 @@ public class MainController implements Initializable {
                 List<Integer> seller = new ArrayList<>();
                 String invoiceNumber = documentInvoiceModel.getHeaderModel().getInvoiceNumber();
                 //    JOptionPane.showMessageDialog(null, invoiceNumber);
-                if (documentInvoiceDao.CheckIfDocumentExists(invoiceNumber)) {
+                boolean exist = documentInvoiceDao.CheckIfDocumentExists(invoiceNumber);
+                boolean exist2 = documentInvoiceDao.CheckIfDocumentExists2(invoiceNumber);
+                if (exist) {
                     JOptionPane.showMessageDialog(null, "Dokument o numerze: " + invoiceNumber + " był już importowany !\nPlik : " + fileName, "Błąd importu", JOptionPane.ERROR_MESSAGE);
-                    //  Odswiez();
-                    continue;
+                    logger.debug("Dokument o numerze: " + invoiceNumber + " był już importowany");
+                    Odswiez();
+                    break;
 
+                } else if (!exist) {
+                    if (exist2) {
+                        JOptionPane.showMessageDialog(null, "Dokument o numerze: " + invoiceNumber + " był już importowany !\nPlik : " + fileName, "Błąd importu", JOptionPane.ERROR_MESSAGE);
+                        logger.debug("Dokument o numerze: " + invoiceNumber + " był już importowany");
+                        Odswiez();
+                        break;
+                    }
                 }
 
                 try {
@@ -394,6 +429,7 @@ public class MainController implements Initializable {
                     cartModelEdi = new CartModelEdi();
                     cartModelEdi.setEan(line.getLineItemModel().getEAN());
                     cartModelEdi.setNetPice(line.getLineItemModel().getInvoiceUnitNetPrice());
+                    //  JOptionPane.showMessageDialog(null,line.getLineItemModel().getInvoiceQuantity());
                     cartModelEdi.setQuantity(line.getLineItemModel().getInvoiceQuantity());
                     cartModelEdi.setKartName(line.getLineItemModel().getItemDescription());
                     String zamdost = line.getLineOrderModel().getBuyerOrderNumber();
@@ -405,10 +441,15 @@ public class MainController implements Initializable {
                         cartModelEdi.setNetPice(line.getLineItemModel().getProductFeeDetailsModel().getUnitNetPriceWithoutFee());
                     }
                     String ean = line.getLineItemModel().getEAN();
+                    //  JOptionPane.showMessageDialog(null, ean);
+
                     try {
+
                         kart_indeks = documentInvoiceDao.GetKartIndeks(line.getLineItemModel().getEAN());
-                        if ((kart_indeks.isEmpty()) || (kart_indeks == null)) {
-                            JOptionPane.showMessageDialog(null, "Błąd importu pliku " + fileName, "Nie znaleziono kartoteki o numerze EAN: " + ean + "\nlub podany numer EAN wskazany powtarza się.\nImport został przerwany\nNależy uzupełnić kod EAN w podanej kartotece", JOptionPane.ERROR_MESSAGE);
+
+                        //        JOptionPane.showMessageDialog(null,kart_indeks);
+                        if ((kart_indeks.isEmpty()) || (kart_indeks == null) || (kart_indeks.equals(""))) {
+                            //    JOptionPane.showInputDialog(null, "Błąd importu pliku " + fileName, "Nie znaleziono kartoteki o numerze EAN: " + ean + "\nlub podany numer EAN wskazany powtarza się.\nImport został przerwany\nNależy uzupełnić kod EAN w podanej kartotece", JOptionPane.ERROR_MESSAGE);
                             logger.debug("Nie znaleziono kartoteki o numerze EAN: " + ean);
                             //   Odswiez();
                             return null;
@@ -417,8 +458,9 @@ public class MainController implements Initializable {
                         }
                     } catch (Exception ex) {
                         JOptionPane.showMessageDialog(null, "Nie znaleziono kartoteki o numerze EAN: " + ean + "\nImport został przerwany\nNależy uzupełnić kod EAN w podanej kartotece : " + cartModelEdi.getKartName(), "Błąd importu pliku " + fileName, JOptionPane.ERROR_MESSAGE);
+                        JOptionPane.showInputDialog(null, "EAN nowej kartoteki", ean);
                         logger.debug("Nie znaleziono kartoteki o numerze EAN: " + ean + " (" + cartModelEdi.getKartName() + ")\n" + ex.getMessage());
-                        //    Odswiez();
+                        Odswiez();
                         return null;
                     }
                     list.add(cartModelEdi);
@@ -441,7 +483,7 @@ public class MainController implements Initializable {
                             documentInvoiceDao.ImportPzPoz(invoiceModel, cartModelEdi1, urzzew_nagl);
                             // Thread.sleep();
                         } catch (Exception ex) {
-                            JOptionPane.showMessageDialog(null, "Błąd importu pozycji dokumentu : " + fileName, "Błąd importu 1", JOptionPane.ERROR_MESSAGE);
+                            JOptionPane.showMessageDialog(null, "Błąd importu pozycji dokumentu : " + fileName, "Błąd importu pozycji", JOptionPane.ERROR_MESSAGE);
                             buttonImport.setDisable(false);
                             buttonConnect.setDisable(false);
                         }
@@ -457,7 +499,7 @@ public class MainController implements Initializable {
                 try {
                     documentInvoiceDao.InsertNewDocumentNumber(invoiceModel);
                 } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(null, "Błąd zapisu do tabeli zaimportowanego pliku : " + fileName, "Błąd importu 2", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(null, "Błąd zapisu do tabeli zaimportowanego pliku : " + fileName, "Błąd importu nagłówka", JOptionPane.ERROR_MESSAGE);
                     //  Odswiez();
                 }
 
@@ -497,22 +539,39 @@ public class MainController implements Initializable {
                 for (CartModelEdi cartModelEdi : item.getPozycje()) {
                     int idZamDost = 0;
                     int idPz = 0;
-                    idPz = dao.GetIdNaglPZ(invoiceModels.get(invoiceModels.indexOf(item)).getInvoiceNumber());
-                    //   JOptionPane.showMessageDialog(null, idPz);
-                    idZamDost = dao.GetIdNaglZAMDOST(cartModelEdi.getZamdostNumber(), item.getIdKontrah());
+                    String pz = invoiceModels.get(invoiceModels.indexOf(item)).getInvoiceNumber();
+                    String zamdost = cartModelEdi.getZamdostNumber();
+                    Thread.sleep(300);
+                    try {
+                        idPz = dao.GetIdNaglPZ(pz);
+
+                    } catch (Exception ex) {
+                        logger.debug(ex.getStackTrace());
+                    }
+                    try {
+                    idZamDost = dao.GetIdNaglZAMDOST(zamdost, item.getIdKontrah());
+                    } catch (Exception ex) {
+                        logger.debug(ex.getStackTrace());
+                    }
                     //   JOptionPane.showMessageDialog(null, "PZ: " + idPz + "\nZAMDOST: " + idZamDost);
+                    //   JOptionPane.showMessageDialog(null, idPz);
+                    //  JOptionPane.showMessageDialog(null, cartModelEdi.getZamdostNumber());
+                    Thread.sleep(300);
+
+
                     //logger.debug("PZ: " + idPz + " : "+item.getInvoiceNumber()+ "\nZAMDOST: " + idZamDost+" : "+cartModelEdi.getZamdostNumber());
 
                     if ((idPz != 0) && (idZamDost != 0)) {
 
                         if (dao.PowiazPZ(idZamDost, idPz)) {
-                            JOptionPane.showMessageDialog(null, "Dokumenty powiązne poprawnie", "Import EDI INTER-ELEKTRO", JOptionPane.INFORMATION_MESSAGE);
+                            logger.debug("Dokumenty " + pz + " i " + zamdost);
+                            //  JOptionPane.showMessageDialog(null, "Dokumenty powiązne poprawnie", "Import EDI INTER-ELEKTRO", JOptionPane.INFORMATION_MESSAGE);
 
                             ok = true;
                         }
                     } else {
                         JOptionPane.showMessageDialog(null, "Nie odnaleziono nagłówka dokumentu Zamówienia o numerze : " + cartModelEdi.getZamdostNumber() + "\nBądź dokument już zrealizownay lub anulowany", "Błąd importu", JOptionPane.ERROR_MESSAGE);
-                        ok = false;
+                        //ok = false;
                         continue;
                     }
 
@@ -610,6 +669,7 @@ public class MainController implements Initializable {
                 afile.delete();
 
                 System.out.println("File is copied successful!");
+                logger.debug("File is copied successful!");
 
             } catch (IOException e) {
                 e.printStackTrace();
@@ -645,6 +705,7 @@ public class MainController implements Initializable {
     private boolean Odswiez() {
         invoices.clear();
         progressBar.setProgress(0.0d);
+        table.getSelectionModel().clearSelection();
         //listOfXml.clear();
         listOfDocuments.getItems().clear();
         faktury.clear();
@@ -786,21 +847,27 @@ public class MainController implements Initializable {
 
     // Tworzenie listy plików z folderu z fakturami i wyświetlanie ich na liście
     private List<String> listOfInvoices(String path) {
-        File folder = new File(path);
-        List<String> list = new ArrayList<>();
-        File[] listOfFiles = folder.listFiles();
+        try {
+            File folder = new File(path);
+            List<String> list = new ArrayList<>();
+            File[] listOfFiles = folder.listFiles();
 
-        for (int i = 0; i < listOfFiles.length; i++) {
-            if ((listOfFiles[i].isFile()) && (listOfFiles[i].getName().contains("PL_INVOICE"))) {
-                list.add(listOfFiles[i].getName());
-                //   System.out.println(listOfFiles[i].getName());
+            for (int i = 0; i < listOfFiles.length; i++) {
+                if ((listOfFiles[i].isFile()) && (listOfFiles[i].getName().contains("PL_INVOICE"))) {
+                    list.add(listOfFiles[i].getName());
+                    //   System.out.println(listOfFiles[i].getName());
 //            } else if (listOfFiles[i].isDirectory()) {
 //                System.out.println("Directory " + listOfFiles[i].getName());
 //            }
-            }
+                }
 
+            }
+            return list;
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(null, "Lokalizacja plików faktur wskazana w konfiguracji nie istnieje\n" +
+                    "Wskaż nową lokalizację w pliku config.properties", "Błąd odczytu plików", JOptionPane.ERROR_MESSAGE);
+            return null;
         }
-        return list;
     }
 
     // Sprawdzanie zaznaczenia i zwraca listę zaznaczonych plików
@@ -810,7 +877,7 @@ public class MainController implements Initializable {
         if (zaznacz) {
 
             invoices.add(itemToAdd);
-         //   JOptionPane.showMessageDialog(null, invoices);
+            //   JOptionPane.showMessageDialog(null, invoices);
 //            for (int i = 0; i < 361; i++) {
 //                try {
 //                    listOfDocuments.setRotate(rotate += i);
@@ -825,7 +892,7 @@ public class MainController implements Initializable {
             //    JOptionPane.showMessageDialog(null, invoices.toString() + " " + listOfXml.size());
         } else if (!zaznacz) {
             invoices.remove(itemToAdd);
-       //     JOptionPane.showMessageDialog(null, invoices);
+            //     JOptionPane.showMessageDialog(null, invoices);
             //   listOfDocuments.setRotate(rotate -= 10);
             //     JOptionPane.showMessageDialog(null, invoices.toString() + " " + listOfXml.size());
         }
@@ -1095,13 +1162,13 @@ public class MainController implements Initializable {
     }
 
     // Logowanie w oknie
-    private void addLog(String text) {
-        try {
-            textArea2.appendText(text + "\n");
-        } catch (Exception ex) {
-            logger.debug(ex.getMessage());
-        }
-    }
+//    private void addLog(String text) {
+//        try {
+//            textArea2.appendText(text + "\n");
+//        } catch (Exception ex) {
+//            logger.debug(ex.getMessage());
+//        }
+//    }
 
     // Zaznaczanie / odznaczanie wszystkich faktur
     private void CheckIfChecked(boolean value) {
@@ -1123,7 +1190,7 @@ public class MainController implements Initializable {
     private void chooseFile() {
         //  progressIndicator.setDisable(false);
         progressBar.setDisable(false);
-        textArea2.clear();
+        //   textArea2.clear();
         File recordsDir = new File(System.getProperty("user.home"));
 
 

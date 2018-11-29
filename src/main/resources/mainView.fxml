@@ -10,14 +10,13 @@
 <?import javafx.scene.control.ProgressBar?>
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.TableView?>
-<?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.input.KeyCodeCombination?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane maxHeight="670.0" maxWidth="950.0" minHeight="-Infinity" minWidth="-Infinity" prefHeight="570.0" prefWidth="500.0" style="-fx-background-color: #3366ff;" stylesheets="@style.css" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="pl.hansonq.controllers.MainController">
+<AnchorPane maxHeight="670.0" maxWidth="950.0" minHeight="-Infinity" minWidth="-Infinity" prefHeight="570.0" prefWidth="552.0" style="-fx-background-color: #3366ff;" stylesheets="@style.css" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="pl.hansonq.controllers.MainController">
    <children>
       <AnchorPane layoutY="104.0" prefHeight="267.0" prefWidth="950.0" AnchorPane.bottomAnchor="299.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="104.0" />
       <HBox layoutX="1.0" layoutY="-1.0" />
@@ -76,9 +75,9 @@
       </AnchorPane>
       <AnchorPane layoutY="362.0" prefHeight="197.0" prefWidth="500.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
          <children>
-            <Button fx:id="buttonImport" layoutX="8.0" layoutY="169.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="81.0" text="Importuj " textFill="#ff0404">
+            <Button fx:id="buttonImport" layoutX="8.0" layoutY="169.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="136.0" text="Importuj " textFill="#ff0404">
                <font>
-                  <Font name="System Bold" size="10.0" />
+                  <Font name="System Bold" size="12.0" />
                </font>
             </Button>
             <Label fx:id="labelVersion" layoutX="900.0" layoutY="136.0" prefHeight="15.0" prefWidth="50.0" textFill="WHITE">
@@ -88,9 +87,9 @@
             </Label>
             <Separator layoutX="8.0" layoutY="149.0" prefHeight="17.0" prefWidth="483.0" AnchorPane.leftAnchor="8.0" AnchorPane.rightAnchor="9.0" />
             <ProgressBar fx:id="progressBar" layoutX="8.0" layoutY="127.0" prefHeight="18.0" prefWidth="421.0" progress="0.0" AnchorPane.leftAnchor="8.0" AnchorPane.rightAnchor="8.0" />
-            <Button fx:id="buttonRefresh" layoutX="209.0" layoutY="169.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="81.0" text="Odśwież">
+            <Button fx:id="buttonRefresh" layoutX="408.0" layoutY="169.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="136.0" text="Odśwież">
                <font>
-                  <Font name="System Bold" size="10.0" />
+                  <Font name="System Bold" size="12.0" />
                </font>
             </Button>
             <Button fx:id="buttonConnect" layoutX="8.0" layoutY="203.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="127.0" text="Powiąż PZ z ZAMDOST" visible="false">
@@ -101,8 +100,7 @@
             <Button fx:id="b" disable="true" layoutX="330.0" layoutY="169.0" mnemonicParsing="false" text="Button" visible="false" />
          </children>
       </AnchorPane>
-      <TextArea fx:id="textArea2" layoutX="9.0" layoutY="94.0" prefHeight="373.0" prefWidth="679.0" AnchorPane.leftAnchor="9.0" AnchorPane.rightAnchor="8.0" AnchorPane.topAnchor="94.0" />
       <ListView fx:id="listOfDocuments" disable="true" layoutX="9.0" layoutY="55.0" prefHeight="421.0" prefWidth="483.0" style="-fx-background-color: lightblue;" visible="false" AnchorPane.leftAnchor="9.0" AnchorPane.rightAnchor="8.0" />
-      <TableView fx:id="table" layoutX="9.0" layoutY="94.0" prefHeight="373.0" prefWidth="483.0" />
+      <TableView fx:id="table" layoutX="9.0" layoutY="63.0" prefHeight="404.0" prefWidth="538.0" />
    </children>
 </AnchorPane>

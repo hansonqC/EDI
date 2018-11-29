@@ -29,7 +29,7 @@ public class Main extends Application {
         primaryStage.getIcons().add(new Image(getClass().getClassLoader().getResourceAsStream("logo.png")));//("file:logo.png"));
         primaryStage.setResizable(false);
         primaryStage.initStyle(StageStyle.DECORATED);
-        Scene scene = new Scene(root, 500, 570);
+        Scene scene = new Scene(root, 550, 570);
         scene.getStylesheets().add(getClass().getClassLoader().getResource("style.css").toExternalForm());
         //scene.setUserAgentStylesheet(STY);
         primaryStage.setScene(scene);

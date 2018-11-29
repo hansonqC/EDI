@@ -48,7 +48,7 @@ public class RowModel {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (o == null ||  getClass() != o.getClass()) return false;
         RowModel rowModel = (RowModel) o;
         return Objects.equals(xmlName, rowModel.xmlName) &&
                 Objects.equals(invoiceNumber, rowModel.invoiceNumber);

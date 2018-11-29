@@ -12,6 +12,16 @@
     <orderEntry type="jdk" jdkName="1.8" jdkType="JavaSDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" scope="RUNTIME" name="StrLibCode" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="StrPcbCrmReminder" level="project" />
+    <orderEntry type="module-library" scope="RUNTIME">
+      <library>
+        <CLASSES>
+          <root url="jar://$USER_HOME$/Desktop/CRM_REMINDER/odPCB_342/StrPcbCrmReminder.jar!/pl/com/stream/pcbiznes/crm/reminder" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
     <orderEntry type="library" name="Maven: org.firebirdsql.jdbc:jaybird-jdk18:3.0.3" level="project" />
     <orderEntry type="library" name="Maven: javax.resource:connector-api:1.5" level="project" />
     <orderEntry type="library" name="Maven: org.antlr:antlr4-runtime:4.7" level="project" />
@@ -50,5 +60,8 @@
     <orderEntry type="library" name="Maven: commons-beanutils:commons-beanutils:1.9.3" level="project" />
     <orderEntry type="library" name="Maven: commons-logging:commons-logging:1.2" level="project" />
     <orderEntry type="library" name="Maven: commons-collections:commons-collections:3.2.2" level="project" />
+    <orderEntry type="library" name="Maven: javax.mail:javax.mail-api:1.6.0" level="project" />
+    <orderEntry type="library" name="Maven: com.sun.mail:javax.mail:1.6.0" level="project" />
+    <orderEntry type="library" name="Maven: javax.activation:activation:1.1" level="project" />
   </component>
 </module>
