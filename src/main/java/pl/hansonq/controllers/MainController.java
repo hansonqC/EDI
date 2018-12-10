@@ -9,30 +9,47 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
 import javafx.scene.control.cell.CheckBoxListCell;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
+import javafx.scene.layout.StackPane;
+import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import javafx.stage.WindowEvent;
 import javafx.util.Callback;
 import jdk.nashorn.internal.scripts.JO;
 import org.apache.log4j.Logger;
 import org.apache.log4j.xml.DOMConfigurator;
 import org.openxmlformats.schemas.officeDocument.x2006.docPropsVTypes.OstorageDocument;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import pl.hansonq.dao.CartDao;
 import pl.hansonq.dao.DocumentInvoiceDao;
 import pl.hansonq.dao.Impl.CartDaoImpl;
 import pl.hansonq.dao.Impl.DocumentInvoiceDaoImpl;
 import pl.hansonq.models.DocumentInvoiceModel;
-import pl.hansonq.models.EdiModel.LineModel;
-import pl.hansonq.models.EdiModel.SellerModel;
+import pl.hansonq.models.PSBModel.LineModel;
+import pl.hansonq.models.PSBModel.RowModel;
+import pl.hansonq.models.PSBModel.SellerModel;
 import pl.hansonq.models.InvoiceModel.CartModelEdi;
 import pl.hansonq.models.InvoiceModel.InvoiceModel;
 import pl.hansonq.models.InvoiceModel.OrderModel;
@@ -40,27 +57,44 @@ import pl.hansonq.utils.FirebirdConnector;
 import pl.hansonq.utils.JaxB;
 import pl.hansonq.utils.Settings;
 import pl.hansonq.utils.Utils;
+import pl.hansonq.utils.progress_indicators.RingProgressIndicator;
+
 
 import javax.swing.*;
+import javax.swing.border.Border;
+import javax.swing.border.LineBorder;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import java.awt.*;
+import java.awt.Dialog;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.*;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.sql.SQLException;
 import java.sql.Time;
 import java.util.*;
+import java.util.List;
 import java.util.Timer;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class MainController implements Initializable, Runnable {
+public class MainController implements Initializable {
 
     private static FileInputStream fileInput;
     private String filePath;
     private String extension;
     List<String> faktury = listOfInvoices(Settings.getListOfInvoices());
+    List<String> faktury2;
     ObservableList<String> lista = FXCollections.observableArrayList();
     private ExecutorService executorService;
     List<String> invoices;
     List<String> fileToMove;
     private List<DocumentInvoiceModel> listOfXml;
+    private List<DocumentInvoiceModel> listOfNumbers;
     DocumentInvoiceModel documentInvoiceModel;
     DocumentInvoiceDao documentInvoiceDao;
     List<String> documentsToConnectWithPZ;
@@ -69,6 +103,10 @@ public class MainController implements Initializable, Runnable {
     InvoiceModel invoiceModel;
     CartModelEdi cartModelEdi;
     private Task task;
+    List<RowModel> listOfFiles;
+    static List<String> kartList;
+    Alert alert;//=new ArrayList<>();
+
 
     private static String lastVisitedDirectory = System.getProperty("user.home");
     @FXML
@@ -85,22 +123,26 @@ public class MainController implements Initializable, Runnable {
     @FXML
     Label labelVersion;
     @FXML
-    private Button loadButton, buttonImport, buttonRefresh, buttonConnect;
+    private Button loadButton, buttonImport, buttonRefresh, buttonConnect, b;
     @FXML
     CheckBox check;
+    @FXML
+    TableView table;
     @FXML
     private TextField textFileImport;
     @FXML
     private ProgressBar progressBar;
-    final static String version = "4.0.0.1";
+    final static String version = "1.0.0.1";
     final static Logger logger = Logger.getLogger(MainController.class);
 
     public MainController() {
         executorService = Executors.newSingleThreadExecutor();
+
     }
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+
         executorService = Executors.newSingleThreadExecutor();
         textArea2.setEditable(false);
         menuTestConnection.setOnAction(e -> testConnection());
@@ -110,9 +152,11 @@ public class MainController implements Initializable, Runnable {
         menuClose.setOnAction(e -> System.exit(0));
         buttonImport.setOnMouseClicked(e -> Start());//ImportKartotek());
         buttonRefresh.setOnMouseClicked(e -> Odswiez());
+        b.setOnMouseClicked(e -> ProgressIndicator());
         listOfDocuments.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         invoices = new ArrayList<String>();
         listOfXml = new ArrayList<>();
+        listOfNumbers = new ArrayList<>();
         try {
             DOMConfigurator.configure("log4j.xml");
         } catch (Exception ex) {
@@ -122,6 +166,7 @@ public class MainController implements Initializable, Runnable {
 
 
         labelVersion.setText("ver. " + version);
+        // listOfDocuments.set
         listOfDocuments.setOnKeyPressed(e -> {
             if (e.getCode() == KeyCode.SHIFT) {
                 listOfDocuments.getSelectionModel().selectAll();
@@ -140,15 +185,85 @@ public class MainController implements Initializable, Runnable {
 //
 //            }
 //        });
+        //   listOfXml = LoadXml(invoices);
+        //     JOptionPane.showMessageDialog(null, invoices.get(0));
+
         Odswiez();
+        FillTable();
+        //   JOptionPane.showMessageDialog(null, faktury.size());
+//        for (String faktura : faktury) {
+//            faktury.set(faktury.indexOf(faktura), faktura + " - " + listOfXml.get(faktury.indexOf(faktura)).getHeaderModel().getInvoiceNumber());
+//        }
 
 
     }
 
-    private void Start() {
-        if (Job()) {
-            //  PowiazPz(listOfDocumentsToConnect);
+
+    private void FillTable() {
+        List<RowModel> rowModels = LoadingFiles(faktury);
+        TableColumn col1 = new TableColumn("V");
+        TableColumn col2 = new TableColumn("Nazwa pliku XML");
+        TableColumn col3 = new TableColumn("Numer faktury");
+        col1.prefWidthProperty().bind(table.widthProperty().multiply(0.05));
+        col2.prefWidthProperty().bind(table.widthProperty().multiply(0.6));
+        col3.prefWidthProperty().bind(table.widthProperty().multiply(0.35));
+        col1.setResizable(false);
+        col2.setResizable(false);
+        col3.setResizable(false);
+
+        table.getColumns().addAll(col1, col2, col3);
+
+        final ObservableList<RowModel> observableList = FXCollections.observableArrayList(
+                rowModels
+        );
+
+        col1.setCellValueFactory(new PropertyValueFactory<RowModel, String>("select"));
+        col2.setCellValueFactory(new PropertyValueFactory<RowModel, String>("xmlName"));
+        col3.setCellValueFactory(new PropertyValueFactory<RowModel, String>("invoiceNumber"));
+        table.setItems(observableList);
+        table.setPlaceholder(new Label("Nie załadowano żadnego pliku"));
+
+    }
+
+    private List<RowModel> LoadingFiles(List<String> files) {
+        listOfFiles = new ArrayList<>();
+        RowModel rowModel;
+        DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
+        try {
+            for (String file : files) {
+                DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();
+                Document doc = docBuilder.parse(Settings.getListOfInvoices() + file);
+
+                doc.getDocumentElement().normalize();
+
+                NodeList numbers = doc.getElementsByTagName("Number");
+
+                Element number = (Element) numbers.item(0);
+
+                NodeList invoiceNumbers = number.getChildNodes();
+                String num = ((Node) invoiceNumbers.item(0)).getNodeValue().trim();
+                //    JOptionPane.showMessageDialog(null,num);
+                rowModel = new RowModel(file, num);
+                listOfFiles.add(rowModel);
+                // Collections.sort(listOfFiles);
+            }
+            return listOfFiles;
+        } catch (Exception ex) {
+            logger.debug(ex.fillInStackTrace());
+            return null;
         }
+
+    }
+
+    private void Start1() {
+        JaxB.jaxbXMLToDocumentInvoiceModelObject(textFileImport.getText());
+    }
+
+    private void Start() {
+        Job();
+        //   ProgressIndicator();
+        //  PowiazPz(listOfDocumentsToConnect);
+
     }
 
     private boolean Job() {
@@ -159,19 +274,22 @@ public class MainController implements Initializable, Runnable {
         TimerTask timerTask = new TimerTask() {
             @Override
             public void run() {
-                buttonImport.setDisable(true);
-                PowiazPz(listOfDocumentsToConnect);
-                JOptionPane.showMessageDialog(null, "Pliki EDI zostały zaimportowane poprawnie !", "Import EDI INTER-ELEKTRO", JOptionPane.INFORMATION_MESSAGE);
-                buttonImport.setDisable(false);
+                //     JOptionPane.showConfirmDialog(null,listOfDocumentsToConnect.get(0));
+//                if (PowiazPz(listOfDocumentsToConnect)) {
+//                    JOptionPane.showMessageDialog(null, "Zakończono import plików !", "Import EDI INTER-ELEKTRO", JOptionPane.INFORMATION_MESSAGE);
+//                    MoveImportedFile(fileToMove);
+//
+//                }
+                Platform.runLater(() -> Odswiez());
             }
         };
 
         Runnable runnable1 = new Runnable() {
             @Override
             public void run() {
-                Odswiez();
+                //   Odswiez();
                 if (wypychacz()) {
-                    timer.schedule(timerTask, 4000l);
+                    timer.schedule(timerTask, 8000l);
                 }
 
             }
@@ -194,9 +312,16 @@ public class MainController implements Initializable, Runnable {
 
     }
 
-
+    ///  1  /////////////
     private boolean Run() {
         try {
+            ObservableList<RowModel> dataList = FXCollections.observableArrayList();
+            for (RowModel bean : listOfFiles) {
+                if (bean.getSelect().isSelected()) {
+                    invoices.add(bean.getXmlName());
+                }
+            }
+            //   JOptionPane.showMessageDialog(null, invoices);
             listOfXml = LoadXml(invoices);
             listOfDocumentsToConnect = new ArrayList<>();
             listOfDocumentsToConnect = ImportPlikow(listOfXml);
@@ -231,88 +356,250 @@ public class MainController implements Initializable, Runnable {
         try {
             for (DocumentInvoiceModel documentInvoiceModel : listOfDocumentInvoiceModels2) {
                 progressBar.setProgress(0.0d);
+                // JOptionPane.showMessageDialog(null, invoices.get(0));
                 String fileName = invoices.get(listOfDocumentInvoiceModels2.indexOf(documentInvoiceModel));
-                InvoiceModel invoiceModel;// = new InvoiceModel();
+                InvoiceModel invoiceModel2;// = new InvoiceModel();
                 CartModelEdi cartModelEdi; //= new CartModelEdi();
-                String nip1 = documentInvoiceModel.getInvoicePartiesModel().getSellerModel().getTaxID();
+                String nip1 = documentInvoiceModel.getInvoicePartiesModel().getSellerModel().getCompanyModel().getTaxID();
                 String poNip = (nip1.replace("PL", "")).replace("-", "");
-                String iln1 = documentInvoiceModel.getInvoicePartiesModel().getSellerModel().getILN();
+                String iln1 = documentInvoiceModel.getInvoicePartiesModel().getSellerModel().getCompanyModel().getILN();
                 // String nazwapliku = xmlFile. //invoices.get(listOfXml.indexOf(documentInvoiceModel));
                 int idKontrah = 0;
                 int nrKontrah = 0;
                 int urzzew_nagl = 0;
-                String kart_indeks = "";
+
                 List<Integer> seller = new ArrayList<>();
-                String invoiceNumber = documentInvoiceModel.getHeaderModel().getInvoiceNumber();
-                //    JOptionPane.showMessageDialog(null, invoiceNumber);
-                if (documentInvoiceDao.CheckIfDocumentExists(invoiceNumber)) {
+                String invoiceNumber = documentInvoiceModel.getHeaderModel().getNumber();
+                boolean exist = documentInvoiceDao.CheckIfDocumentExists(invoiceNumber);
+                boolean exist2 = documentInvoiceDao.CheckIfDocumentExists2(invoiceNumber);
+                if (exist) {
                     JOptionPane.showMessageDialog(null, "Dokument o numerze: " + invoiceNumber + " był już importowany !\nPlik : " + fileName, "Błąd importu", JOptionPane.ERROR_MESSAGE);
+                    logger.debug("Dokument o numerze: " + invoiceNumber + " był już importowany");
                     //  Odswiez();
                     continue;
 
+                } else if (!exist) {
+                    if (exist2) {
+                        JOptionPane.showMessageDialog(null, "Dokument o numerze: " + invoiceNumber + " był już importowany !\nPlik : " + fileName, "Błąd importu", JOptionPane.ERROR_MESSAGE);
+                        logger.debug("Dokument o numerze: " + invoiceNumber + " był już importowany");
+                        continue;
+                    }
+                }
+                try {
+                    seller = documentInvoiceDao.getKontrah(poNip, iln1);
+                    //   JOptionPane.showMessageDialog(null, seller.toString());
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    logger.debug(ex.fillInStackTrace());
                 }
 
-                if (documentInvoiceDao.getKontrah(poNip, iln1) != null) {
-                    seller = documentInvoiceDao.getKontrah(poNip, iln1);
-                } else if (documentInvoiceDao.getKontrah(poNip, iln1) == null) {
-                    seller = documentInvoiceDao.getKontrahILN(poNip, iln1);
-
-                } else if (documentInvoiceDao.getKontrahILN(poNip, iln1) == null) {
+                if (seller.get(0) == 0) {
                     JOptionPane.showMessageDialog(null, "Nie odnaleziono kontrahenta dla dokumentu " + invoiceNumber + "\nPlik : " + fileName, "Błąd importu", JOptionPane.ERROR_MESSAGE);
                     continue;
                 }
+
                 idKontrah = seller.get(0);
                 nrKontrah = seller.get(1);
-                invoiceModel = new InvoiceModel();
-                invoiceModel.setFileName(fileName);
-                invoiceModel.setSeller(String.valueOf(idKontrah));
-                invoiceModel.setSellerNr(String.valueOf(nrKontrah));
-                invoiceModel.setInvoiceNumber(documentInvoiceModel.getHeaderModel().getInvoiceNumber());
-                invoiceModel.setInvoiceDate(documentInvoiceModel.getHeaderModel().getInvoiceDate());
-                invoiceModel.setNip(documentInvoiceModel.getInvoicePartiesModel().getSellerModel().getTaxID());
-                invoiceModel.setIln(documentInvoiceModel.getInvoicePartiesModel().getSellerModel().getILN());
-                invoiceModel.setSum(Double.valueOf(documentInvoiceModel.getSummaryModel().getTotalGrossAmount()));
-                invoiceModel.setIdKontrah(idKontrah);
+                invoiceModel2 = new InvoiceModel();
+                invoiceModel2.setNip(poNip);
+                invoiceModel2.setFileName(fileName);
+                invoiceModel2.setSeller(String.valueOf(idKontrah));
+                invoiceModel2.setSellerNr(String.valueOf(nrKontrah));
+                invoiceModel2.setInvoiceNumber(documentInvoiceModel.getHeaderModel().getNumber());
+                invoiceModel2.setInvoiceDate(documentInvoiceModel.getHeaderModel().getInvoiceDate());
+                invoiceModel2.setSum(Double.valueOf(documentInvoiceModel.getSummaryModel().getTotalGrossAmount()));
+                invoiceModel2.setIdKontrah(idKontrah);
+                // invoiceModel.setN
                 List<CartModelEdi> list = new ArrayList<>();
                 double lines = (documentInvoiceModel.getLinesModel().getInvoiceLines().size());
                 double counter = 0.0;
                 double progress = (1d / lines);
                 for (LineModel line : documentInvoiceModel.getLinesModel().getInvoiceLines()) {
+                    String kart_indeks = "";
+
                     cartModelEdi = new CartModelEdi();
-                    cartModelEdi.setEan(line.getLineItemModel().getEAN());
-                    cartModelEdi.setNetPice(line.getLineItemModel().getInvoiceUnitNetPrice());
-                    cartModelEdi.setQuantity(line.getLineItemModel().getInvoiceQuantity());
-                    cartModelEdi.setKartName(line.getLineItemModel().getItemDescription());
-                    String zamdost = line.getLineOrderModel().getBuyerOrderNumber();
-                    String poZamdost = zamdost.replace("ZAMDOST ", "");
-                    cartModelEdi.setZamdostNumber(poZamdost);
-                    if (line.getLineItemModel().getProductFeeDetailsModel() == null) {
-                        cartModelEdi.setNetPice(line.getLineItemModel().getInvoiceUnitNetPrice());
-                    } else {
-                        cartModelEdi.setNetPice(line.getLineItemModel().getProductFeeDetailsModel().getUnitNetPriceWithoutFee());
+                    cartModelEdi.setEan(line.getDetailModel().getEan());
+                    cartModelEdi.setNetPice(line.getDetailModel().getUnitPrice());
+                    cartModelEdi.setQuantity(line.getDetailModel().getQuantity());
+                    cartModelEdi.setKartName(line.getDetailModel().getDescription());
+
+                    //    String zamdost = line.getLineOrderModel().getBuyerOrderNumber();
+                    // String poZamdost = zamdost.replace("ZAMDOST ", "");
+                    //cartModelEdi.setZamdostNumber(zamdost);
+//                if (line.getLineItemModel().getProductFeeDetailsModel() == null) {
+//                    cartModelEdi.setNetPice(line.getLineItemModel().getInvoiceUnitNetPrice());
+//                } else {
+//                    cartModelEdi.setNetPice(line.getLineItemModel().getProductFeeDetailsModel().getUnitNetPriceWithoutFee());
+//                }
+                    String ean = line.getDetailModel().getEan();
+                    String supplierCode = line.getDetailModel().getSupplierItemCode();
+                    kart_indeks = documentInvoiceDao.GetKartIndeksByEan(ean);
+                    if ((kart_indeks != null) && (!kart_indeks.isEmpty())) {
+                        cartModelEdi.setIndeks(kart_indeks);
+                        logger.debug("Dodano kartotekę " + kart_indeks + " na podstawie kodu EAN : " + ean);
                     }
-                    String ean = line.getLineItemModel().getEAN();
-                    try {
-                        kart_indeks = documentInvoiceDao.GetKartIndeks(line.getLineItemModel().getEAN());
-                        if ((kart_indeks.isEmpty()) || (kart_indeks == null)) {
-                            JOptionPane.showMessageDialog(null, "Błąd importu pliku " + fileName, "Nie znaleziono kartoteki o numerze EAN: " + ean + "\nlub podany numer EAN wskazany powtarza się.\nImport został przerwany\nNależy uzupełnić kod EAN w podanej kartotece", JOptionPane.ERROR_MESSAGE);
-                            logger.debug("Nie znaleziono kartoteki o numerze EAN: " + ean);
-                            //   Odswiez();
-                            return null;
-                        } else {
-                            cartModelEdi.setIndeks(kart_indeks);
+                    if ((kart_indeks == null) || kart_indeks.isEmpty()) {
+                        kart_indeks = documentInvoiceDao.GetKartIndeksBySupplierCode(supplierCode);
+                    }
+                    if ((kart_indeks != null) && (!kart_indeks.isEmpty())) {
+                        cartModelEdi.setIndeks(kart_indeks);
+                        logger.debug("Dodano kartotekę " + kart_indeks + " na podstawie KODU PRODUCENTA : " + supplierCode);
+                        JOptionPane.showMessageDialog(null, "KODO");
+                    }
+
+                    if ((kart_indeks == null) || kart_indeks.isEmpty()) {
+                        logger.debug("Nie odnaleziono kartoteki na podstawie KODU PRODUCENTA : " + supplierCode);
+                        JOptionPane.showMessageDialog(null, "Nie odnaleziono kartoteki na podstawie nr KODU TOWAROWEGO SPRZEDAWCY\nWybierz właściwą kartotekę...\"", "Błąd importu pliku ", JOptionPane.ERROR_MESSAGE);
+//                                JFrame frame = new JFrame("Import faktur...");
+//                                java.net.URL imgURL = getClass().getClassLoader().getResource("logo.png");
+//                                ImageIcon icon = new ImageIcon(imgURL);
+//                                frame.setIconImage(icon.getImage());
+//                                frame.setUndecorated(true);
+//                                frame.setVisible(true);
+//                                frame.setLocationRelativeTo(null);
+
+                        try {
+
+
+                            String n = cartModelEdi.getKartName().trim().replace("  ", " ");
+                            String[] nazwa = n.split(" ");
+                            String nazwa1 = (nazwa[0] + "%" + nazwa[1]).trim().toUpperCase();
+                            String nazwa2 = (nazwa[1] + "%" + nazwa[0]).trim().toUpperCase();
+                            String nazwa3 = (nazwa[1] + "%" + nazwa[2]).trim().toUpperCase();
+                            String nazwa4 = (nazwa[2] + "%" + nazwa[1]).trim().toUpperCase();
+                            //   JOptionPane.showMessageDialog(null, "nazwa1 : " + nazwa1 + "\nnazwa2 : " + nazwa2);
+                            kartList = new ArrayList<>();
+                            try {
+                                kartList = documentInvoiceDao.Kartoteki(nazwa1);
+                            } catch (Exception ex2) {
+                                logger.debug(ex2.getStackTrace());
+                            }
+                            if ((kartList.isEmpty()) || (kartList.size() == 0)) {
+                                try {
+                                    kartList = documentInvoiceDao.Kartoteki(nazwa2);
+                                } catch (Exception ex2) {
+                                    logger.debug(ex2.getStackTrace());
+                                }
+                            }
+                            if ((kartList.isEmpty()) || (kartList.size() == 0)) {
+                                try {
+                                    kartList = documentInvoiceDao.Kartoteki(nazwa3);
+                                } catch (Exception ex2) {
+                                    logger.debug(ex2.getStackTrace());
+                                }
+                            }
+                            if ((kartList.isEmpty()) || (kartList.size() == 0)) {
+                                try {
+                                    kartList = documentInvoiceDao.Kartoteki(nazwa4);
+                                } catch (Exception ex2) {
+                                    logger.debug(ex2.getStackTrace());
+                                }
+                            }
+                            // Object[] listArray=(String[])kartList.toArray();
+                            String[] listArray = kartList.stream().toArray(String[]::new);
+                            JFrame frame = new JFrame("Import faktur...");
+                            java.net.URL imgURL = getClass().getClassLoader().getResource("logo.png");
+                            ImageIcon icon = new ImageIcon(imgURL);
+                            frame.setIconImage(icon.getImage());
+                            frame.setUndecorated(true);
+                            frame.setVisible(true);
+                            frame.setLocationRelativeTo(null);
+
+                            JFrame frame2 = new JFrame("Import faktur...");
+                            ImageIcon icon2 = new ImageIcon(imgURL);
+                            frame2.setIconImage(icon2.getImage());
+                            frame2.setUndecorated(true);
+                            frame2.setVisible(true);
+                            frame2.setLocationRelativeTo(null);
+                            final JComboBox<String> combo = new JComboBox<>(listArray);
+
+                            String[] options = {"OK", "Anuluj", "Wyszukaj ręcznie . . ."};
+
+                            String title = "Wybierz kartotekę...";
+                            int selection = JOptionPane.showOptionDialog(frame2, combo, title,
+                                    JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE, null,
+                                    options, options[0]);
+                            // frame2.dispose();
+
+                            if (selection == 2) {
+                                String s = (String) JOptionPane.showInputDialog(
+                                        frame2,
+                                        "Wyszukaj kartotekę " + cartModelEdi.getKartName() + "\nna podstawie indeksu : ",
+                                        "Wprowadź indeks kartoteki",
+                                        JOptionPane.QUESTION_MESSAGE);
+                                try {
+                                    String kartIndeks = documentInvoiceDao.GetKartIndeksByIndeks(s);
+                                    try {
+                                        Thread.sleep(50);
+                                    } catch (InterruptedException e) {
+                                        e.printStackTrace();
+                                    }
+                                    if ((kart_indeks != null) && (!kart_indeks.isEmpty())) {
+                                        cartModelEdi.setIndeks(kart_indeks);
+                                        logger.debug("Dodano kartotekę " + kart_indeks);
+                                        JOptionPane.showMessageDialog(null, "Dodano kartotekę o indeksie : " + cartModelEdi.getIndeks(), "Wybór ręczny", JOptionPane.INFORMATION_MESSAGE);
+                                    }
+                                } catch (Exception ex3) {
+                                    logger.debug(ex3.getStackTrace());
+                                }
+                                frame2.dispose();
+                            }
+                            if (selection == 1) {
+                                JOptionPane.showMessageDialog(null, "Nie wybrano kartoteki !");
+                                frame2.dispose();
+                            }
+
+                            if (selection == 0) {
+                                try {
+                                    String longName = combo.getSelectedItem().toString();
+                                    String kartIndeks = documentInvoiceDao.GetKartIndeksByName(longName);
+                                    Thread.sleep(50);
+                                    if ((kart_indeks != null) && (!kart_indeks.isEmpty())) {
+                                        cartModelEdi.setIndeks(kart_indeks);
+                                        logger.debug("Dodano kartotekę " + kart_indeks);
+                                        JOptionPane.showMessageDialog(null, "Dodano kartotekę o indeksie : " + cartModelEdi.getIndeks(), "Lista wyboru", JOptionPane.INFORMATION_MESSAGE);
+                                    }
+
+                                } catch (Exception ex2) {
+                                    logger.debug(ex2.getStackTrace());
+
+                                }
+                                frame2.dispose();
+                            }
+                            //    frame2.dispose();
+                        } catch (Exception ex2) {
+                            logger.debug(ex2.getStackTrace());
                         }
-                    } catch (Exception ex) {
-                        JOptionPane.showMessageDialog(null, "Nie znaleziono kartoteki o numerze EAN: " + ean + "\nImport został przerwany\nNależy uzupełnić kod EAN w podanej kartotece : " + cartModelEdi.getKartName(), "Błąd importu pliku " + fileName, JOptionPane.ERROR_MESSAGE);
-                        logger.debug("Nie znaleziono kartoteki o numerze EAN: " + ean + " (" + cartModelEdi.getKartName() + ")\n" + ex.getMessage());
-                        //    Odswiez();
-                        return null;
                     }
+
+                    //ostatni if
+
+
+                    // ########################################################
+                    //Odswiez();
+                    //  continue;
+//                    catch(Exception ex){
+//                    System.out.println(ex.fillInStackTrace());
+//
+//                }
+
+
+//                    Platform.runLater(() -> {
+//                        try {
+//                            ListOpen(kartList);
+//                        } catch (IOException e) {
+//                            e.printStackTrace();
+//                        }
+//                    });
                     list.add(cartModelEdi);
                     counter += progress;
                     progressBar.setProgress(counter);
                 }
-                invoiceModel.setPozycje(list);
+                ///  KONIEC LINII
+
+                invoiceModel2.setPozycje(list);
+
+                ///    JOptionPane.showMessageDialog(null, invoiceModel2.toString());
                 ///  ZALOZENIE NAGLOWKA DOKUMENTU
                 try {
                     Thread.sleep(20);
@@ -320,11 +607,12 @@ public class MainController implements Initializable, Runnable {
                     e.printStackTrace();
                 }
                 try {
-                    urzzew_nagl = documentInvoiceDao.ImportPzNagl(invoiceModel);
-
-                    for (CartModelEdi cartModelEdi1 : invoiceModel.getPozycje()) {
+                    // JOptionPane.showMessageDialog(null, invoiceModel);
+                    urzzew_nagl = documentInvoiceDao.ImportPzNagl(invoiceModel2);
+                    //   JOptionPane.showMessageDialog(null,"URZZEWNAGL :"+urzzew_nagl);
+                    for (CartModelEdi cartModelEdi1 : invoiceModel2.getPozycje()) {
                         try {
-                            documentInvoiceDao.ImportPzPoz(invoiceModel, cartModelEdi1, urzzew_nagl);
+                            documentInvoiceDao.ImportPzPoz(invoiceModel2, cartModelEdi1, urzzew_nagl);
                             // Thread.sleep();
                         } catch (Exception ex) {
                             JOptionPane.showMessageDialog(null, "Błąd importu pozycji dokumentu : " + fileName, "Błąd importu 1", JOptionPane.ERROR_MESSAGE);
@@ -338,10 +626,10 @@ public class MainController implements Initializable, Runnable {
                     //   Odswiez();
                 }
 
-                invoiceModel.setId_urzzew_nagl(urzzew_nagl);
+                invoiceModel2.setId_urzzew_nagl(urzzew_nagl);
 
                 try {
-                    documentInvoiceDao.InsertNewDocumentNumber(invoiceModel);
+                    documentInvoiceDao.InsertNewDocumentNumber(invoiceModel2);
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(null, "Błąd zapisu do tabeli zaimportowanego pliku : " + fileName, "Błąd importu 2", JOptionPane.ERROR_MESSAGE);
                     //  Odswiez();
@@ -356,12 +644,14 @@ public class MainController implements Initializable, Runnable {
 //                }
 
 
-                modelList.add(invoiceModel);
-
+                modelList.add(invoiceModel2);
+                fileToMove.add(fileName);
+                // return invoiceModel2;
             }
+        } catch (
+                Exception ex)
 
-
-        } catch (Exception ex) {
+        {
             ex.printStackTrace();
             logger.debug(ex.getMessage());
             return null;
@@ -369,50 +659,89 @@ public class MainController implements Initializable, Runnable {
         return modelList;
     }
 
+    //        Wybór kartoteki ze spisu
+    private Optional GetIndeksChoice(List<String> indeksNames) {
+        String indeks = "";
+        ObservableList<String> listOfIndekses = FXCollections.observableArrayList();
+        listOfIndekses.addAll(indeksNames);
+        ChoiceDialog<String> dialog = new ChoiceDialog<>();
+
+        dialog.setHeaderText("Wskaż właściwą kartotekę...");
+        dialog.setContentText("Wybierz z listy rozwijanej właściwą kartotekę");
+        dialog.getItems().setAll(listOfIndekses);
+        Optional<String> optional = dialog.showAndWait();
+
+        return optional;
+    }
+
+    ///  OTWIERANIE LISTY PRODUKTÓW
+    private void ListOpen(List<String> list) throws IOException {
+        Parent root = FXMLLoader.load(getClass().getClassLoader().getResource("listView.fxml"));
+        Stage primaryStage = new Stage();
+        primaryStage.setTitle("EDI RAJMAN");
+        primaryStage.getIcons().add(new Image(getClass().getClassLoader().getResourceAsStream("logo.png")));//("file:logo.png"));
+        primaryStage.setResizable(false);
+        primaryStage.initStyle(StageStyle.DECORATED);
+        Scene scene = new Scene(root, 820, 570);
+        scene.getStylesheets().add(getClass().getClassLoader().getResource("style.css").toExternalForm());
+        //scene.setUserAgentStylesheet(STY);
+        primaryStage.setScene(scene);
+//        primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
+//            @Override
+//            public void handle(WindowEvent e) {
+//                Platform.exit();
+//                System.exit(0);
+//
+//            }
+//        });
+        primaryStage.setMaximized(false);
+        // System.out.println(FirebirdConnector.getSqlLink());
+        primaryStage.showAndWait();
+    }
 
     //  Wiązanie PZ z ZAMDOST
-    private boolean PowiazPz(List<InvoiceModel> invoiceModels) {
-        DocumentInvoiceDao dao = new DocumentInvoiceDaoImpl();
-        int Pz;
-        int Zamdost;
-        for (InvoiceModel item : invoiceModels) {
-            for (CartModelEdi cartModelEdi : item.getPozycje()) {
-                int idZamDost = 0;
-                int idPz = 0;
-                // JOptionPane.showMessageDialog(null, item.getInvoiceNumber());
-                //  JOptionPane.showMessageDialog(null, cartModelEdi.getZamdostNumber());
-                idPz = dao.GetIdNaglPZ(invoiceModels.get(invoiceModels.indexOf(item)).getInvoiceNumber());
-                idZamDost = dao.GetIdNaglZAMDOST(cartModelEdi.getZamdostNumber(), item.getIdKontrah());
-                JOptionPane.showMessageDialog(null, "PZ: " + item.getFileName() + "; " + idPz + "\n" + "ZAMDOST: " + cartModelEdi.getZamdostNumber() + "; " + idZamDost);
+//    private boolean PowiazPz(List<InvoiceModel> invoiceModels) {
+//        DocumentInvoiceDao dao = new DocumentInvoiceDaoImpl();
+//        //  ProgressIndicator();
+//        int Pz;
+//        int Zamdost;
+//        boolean ok = false;
+//        try {
+//            for (InvoiceModel item : invoiceModels) {
+//                for (CartModelEdi cartModelEdi : item.getPozycje()) {
+//                    int idZamDost = 0;
+//                    int idPz = 0;
+//                    idPz = dao.GetIdNaglPZ(invoiceModels.get(invoiceModels.indexOf(item)).getInvoiceNumber());
+//                    //   JOptionPane.showMessageDialog(null, idPz);
+//                    idZamDost = dao.GetIdNaglZAMDOST(cartModelEdi.getZamdostNumber(), item.getIdKontrah());
+//                 //   JOptionPane.showMessageDialog(null, "PZ: " + idPz + "\nZAMDOST: " + idZamDost);
+//                    //logger.debug("PZ: " + idPz + " : "+item.getInvoiceNumber()+ "\nZAMDOST: " + idZamDost+" : "+cartModelEdi.getZamdostNumber());
+//
+//                    if ((idPz != 0) && (idZamDost != 0)) {
+//
+//                        if (dao.PowiazPZ(idZamDost, idPz)) {
+//                            JOptionPane.showMessageDialog(null, "Dokumenty powiązne poprawnie", "Import EDI INTER-ELEKTRO", JOptionPane.INFORMATION_MESSAGE);
+//
+//                            ok = true;
+//                        }
+//                    } else {
+//                        JOptionPane.showMessageDialog(null, "Nie odnaleziono nagłówka dokumentu Zamówienia o numerze : " + cartModelEdi.getZamdostNumber() + "\nBądź dokument już zrealizownay lub anulowany", "Błąd importu", JOptionPane.ERROR_MESSAGE);
+//                        ok = false;
+//                        continue;
+//                    }
+//
+//
+//                }
+//
+//            }
+//            return ok;
+//        } catch (Exception ex) {
+//            logger.debug(ex.fillInStackTrace());
+//            ex.printStackTrace();
+//        }
+//        return false;
+//    }
 
-
-            }
-
-        }
-        //JOptionPane.showMessageDialog(null, idPz);
-        // }
-
-
-        //  Odswiez();
-        return true;
-    }
-
-    private boolean GetPZ(int pz) {
-        return false;
-    }
-
-    private boolean GetZAMDOST(int zamdost, String number) {
-        DocumentInvoiceDao dao = new DocumentInvoiceDaoImpl();
-        try {
-            zamdost = dao.GetIdNaglPZ(number);
-
-            return true;
-        } catch (Exception ex) {
-            logger.debug(ex.fillInStackTrace());
-
-        }
-        return false;
-    }
 
     // Wypchnięcie dokumentów z bufora
     private boolean wypychacz() {
@@ -422,7 +751,8 @@ public class MainController implements Initializable, Runnable {
         commands.add("schtasks.exe");
         commands.add("/RUN");
         commands.add("/TN");
-        commands.add("\"URZZEW_REALIZ\"");
+        commands.add("\"URZZEW_REALIZ_PSB\"");
+        commands.add(Settings.getSystem());
 
         ProcessBuilder builder = new ProcessBuilder(commands);
         try {
@@ -450,20 +780,58 @@ public class MainController implements Initializable, Runnable {
     // Przeniesienie pliku po imporcie i powiązaniu do folderu DONE
     private void MoveImportedFile(List<String> files) {
         for (String file : files) {
+            InputStream inStream = null;
+            OutputStream outStream = null;
+
             try {
+                //   JOptionPane.showMessageDialog(null, file);
+                File afile = new File(Settings.getListOfInvoices() + file);
+                File bfile = new File(Settings.getListOfInvoices() + "DONE\\" + file);
 
-                File fileToMove = new File(file);
-                //  JOptionPane.showMessageDialog(null, Settings.getListOfInvoices() + "DONE\\" + file);
-                boolean temp = fileToMove.renameTo(new File(Settings.getListOfInvoices() + "DONE\\" + file));//file.substring(file.lastIndexOf("\\", file.length()))));
-                if (temp) {
-                    System.out.println("File renamed and moved successfully");
-                    logger.debug("File renamed and moved successfully");
+                inStream = new FileInputStream(afile);
+                outStream = new FileOutputStream(bfile);
 
-                } else {
-                    System.out.println("Failed to move the file");
-                    logger.debug("Failed to move the file");
+                byte[] buffer = new byte[1024];
+
+                int length;
+                //copy the file content in bytes
+                while ((length = inStream.read(buffer)) > 0) {
+
+                    outStream.write(buffer, 0, length);
+
                 }
-            } catch (Exception ex) {
+
+                inStream.close();
+                outStream.close();
+
+                //delete the original file
+                afile.delete();
+
+                System.out.println("File is copied successful!");
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+
+//                File fileToMove = new File(file);
+//                boolean temp=false;
+//              //  JOptionPane.showMessageDialog(null, Settings.getListOfInvoices() + "DONE\\" + file);
+//                  try {
+//                      temp = fileToMove.renameTo(new File(Settings.getListOfInvoices() + "DONE\\" + file));//file.substring(file.lastIndexOf("\\", file.length()))));
+//                  }catch(Exception ex){
+//                      logger.debug(ex.fillInStackTrace());
+//                      ex.printStackTrace();
+//                  }
+//                if (temp) {
+//                    System.out.println("File renamed and moved successfully");
+//                    logger.debug("File renamed and moved successfully");
+//
+//                } else {
+//                    System.out.println("Failed to move the file");
+//                    logger.debug("Failed to move the file");
+//                }
+            catch (Exception ex) {
                 logger.debug(ex.getMessage());
                 JOptionPane.showMessageDialog(null, "Błąd podczas przenoszenia pliku do katalogu zaimportowanych plików !\n" + ex.getMessage(), "Błąd", JOptionPane.ERROR_MESSAGE);
             }
@@ -476,7 +844,7 @@ public class MainController implements Initializable, Runnable {
         invoices.clear();
         progressBar.setProgress(0.0d);
         //listOfXml.clear();
-        listOfDocuments.getItems().clear();
+        //  listOfDocuments.getItems().clear();
         faktury.clear();
         faktury = new ArrayList<>();
         try {
@@ -490,31 +858,479 @@ public class MainController implements Initializable, Runnable {
             logger.debug(ex.getMessage());
         }
         //  listOfDocuments = new ListView<>();
-        listOfDocuments.setCellFactory(CheckBoxListCell.forListView(new Callback<String, ObservableValue<Boolean>>() {
-            @Override
-            public ObservableValue<Boolean> call(String item) {
-                BooleanProperty observable = new SimpleBooleanProperty();
-                observable.addListener((obs, wasSelected, isNowSelected) ->
-                        sprawdz(item, isNowSelected, false)
-                );
-                return observable;
-            }
-        }));
-        if (faktury.size() > 0) {
-            listOfDocuments.getItems().addAll(faktury);
-        } else {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Import PZ");
-            alert.setHeaderText("");
-            alert.setContentText("W katalogu nie ma żadnych dokumentów PZ !");
-            alert.showAndWait();
-        }
+//        listOfDocuments.setCellFactory(CheckBoxListCell.forListView(new Callback<String, ObservableValue<Boolean>>() {
+//            @Override
+//            public ObservableValue<Boolean> call(String item) {
+//                BooleanProperty observable = new SimpleBooleanProperty();
+//                observable.addListener((obs, wasSelected, isNowSelected) ->
+//                        sprawdz(item, isNowSelected, false)
+//                );
+//                return observable;
+//            }
+//        }));
+//        listOfNumbers = LoadXml(faktury);
+//        faktury2=new ArrayList<>();
+//        for (String item : faktury) {
+//            faktury2.add((faktury.indexOf(item)), item += " - " + (listOfNumbers.get(faktury.indexOf(item)).getHeaderModel().getInvoiceNumber()));
+//        }
+
+
+//           if (faktury.size() > 0) {
+//            listOfDocuments.getItems().addAll(faktury);
+//        } else {
+//            Alert alert = new Alert(Alert.AlertType.ERROR);
+//            alert.setTitle("Import PZ");
+//            alert.setHeaderText("");
+//            alert.setContentText("W katalogu nie ma żadnych dokumentów PZ !");
+//            alert.showAndWait();
+//        }
+
         buttonImport.setDisable(false);
         buttonConnect.setDisable(false);
         listOfDocuments.setDisable(false);
         return true;
     }
 
+
+    //  METODY DODATKOWE
+
+    // Tworzenie listy plików z folderu z fakturami i wyświetlanie ich na liście
+    private List<String> listOfInvoices(String path) {
+        File folder = new File(path);
+        List<String> list = new ArrayList<>();
+        File[] listOfFiles = folder.listFiles();
+
+        for (int i = 0; i < listOfFiles.length; i++) {
+            if ((listOfFiles[i].isFile()) && (listOfFiles[i].getName().contains("RPSH")) && (listOfFiles[i].getName().contains(".xml"))) {
+                list.add(listOfFiles[i].getName());
+                //   System.out.println(listOfFiles[i].getName());
+//            } else if (listOfFiles[i].isDirectory()) {
+//                System.out.println("Directory " + listOfFiles[i].getName());
+//            }
+            }
+
+        }
+        return list;
+    }
+
+    // Sprawdzanie zaznaczenia i zwraca listę zaznaczonych plików
+    private List<String> sprawdz(String item, boolean zaznacz, boolean all) {
+        double rotate = listOfDocuments.getRotate();
+        if (zaznacz) {
+            invoices.add(item);
+//            for (int i = 0; i < 361; i++) {
+//                try {
+//                    listOfDocuments.setRotate(rotate += i);
+//
+//                    Thread.sleep(100);
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+
+
+            //    JOptionPane.showMessageDialog(null, invoices.toString() + " " + listOfXml.size());
+        } else if (!zaznacz) {
+            invoices.remove(item);
+            //   listOfDocuments.setRotate(rotate -= 10);
+            //     JOptionPane.showMessageDialog(null, invoices.toString() + " " + listOfXml.size());
+        }
+        return invoices;
+    }
+
+//    // TWORZENIE LISTY ZAMDOST
+//    private List<String> listOfZamdost(String path) {
+//        List<String> zamowienia = new ArrayList<>();
+//        DocumentInvoiceModel invoiceModel = null;
+//
+//        for (String faktura : faktury) {
+//            invoiceModel = new DocumentInvoiceModel();
+//            String path2 = path + faktura;
+//            //  JOptionPane.showMessageDialog(null, path2);
+//
+//            //   invoiceModel = LoadXml(path2);
+//            for (LineModel lineModel : invoiceModel.getLinesModel().getInvoiceLines()) {
+//                String zamdost = lineModel.getLineOrderModel().getBuyerOrderNumber();
+//                if (zamdost.contains("ZAMDOST")) {
+//                    zamowienia.add(zamdost);
+//
+//                }
+//            }
+//            //    String zamdost = invoiceModel.getLinesModel().getInvoceLines().get(0).getLineOrderModel().getBuyerOrderNumber();
+//
+//
+//        }
+//
+//
+//        return zamowienia;
+//    }
+
+    // ZAMIANA LISTY FAKTUR W LISTĘ MODELI FAKTUR
+    private List<DocumentInvoiceModel> LoadXml(List<String> invoicesList) {
+        List<DocumentInvoiceModel> listOfInvoicesXml = new ArrayList<>();
+        for (String invoice : invoicesList) {
+            //  String inv=invoice.substring(0,invoice.lastIndexOf("xml")+3);
+            String file = Settings.getListOfInvoices() + invoice;
+
+
+            //CartBpModel cartBpModel = new CartBpModel();
+            try {
+                InputStream reader = new FileInputStream(file);
+            } catch (FileNotFoundException e) {
+                logger.debug(e.getMessage());
+            }
+
+            File xmlFile = new File(file);
+            FileReader fr = null;
+            try {
+                fr = new FileReader(xmlFile);
+            } catch (FileNotFoundException e) {
+                logger.debug(e.getMessage());
+            }
+            BufferedReader br = new BufferedReader(fr);
+
+
+            String line = null;
+            try {
+                line = br.readLine();
+                // br.close();///////
+            } catch (IOException e) {
+                logger.debug(e.getMessage());
+            }
+            StringBuilder sb = new StringBuilder();
+
+            while (line != null) {
+                sb.append(line).append("\n");
+                try {
+                    line = br.readLine();
+                } catch (IOException e) {
+                    logger.debug(e.getMessage());
+                }
+            }
+
+            // static String plik = file;
+            String outXml = sb.toString();
+            documentInvoiceModel = JaxB.jaxbXMLToDocumentInvoiceModelObject(file);
+            listOfInvoicesXml.add(documentInvoiceModel);
+
+
+        }
+        return listOfInvoicesXml;
+    }
+
+
+    //////////// METODY DODATKOWE ///////////////
+    // Wczytanie ostatnio otwartego folderu
+    private String loadPath() {
+        String path;
+        Properties prop = new Properties();
+        InputStream input = null;
+        try {
+            input = new FileInputStream("path.properties");
+
+            if (input != null) {
+                // input=new FileInputStream("path.properties");
+                //   System.out.println("Brak pliku z ustawieniami");
+                //    savePath(path);
+                prop.loadFromXML(input);
+                path = prop.getProperty("lastPath");
+                if ((path.isEmpty()) || (path == null) || (path.equals(""))) {
+                    path = "C:";
+                }
+                return path;
+            }
+            if (input == null) {
+                return "c:";
+            }
+
+
+        } catch (Exception ex) {
+            return null;//  Utils.createSimpleDialog("Odczyt danych", "", "Błąd odczytu ustawień !", Alert.AlertType.ERROR);
+
+
+        } finally {
+            if (input != null) {
+                try {
+                    input.close();
+                } catch (IOException e) {
+                    logger.debug(e.getMessage());
+                    return null;//  Utils.createSimpleDialog("Odczyt danych", "", "Błąd odczytu ustawień !", Alert.AlertType.ERROR);
+
+                }
+            }
+        }
+        return null;
+    }
+
+    // Zapis ostatnio otwartego folderu
+    private void savePath(String path) {
+
+        Properties prop = new Properties();
+        OutputStream output = null;
+
+        try {
+
+            output = new FileOutputStream("path.properties");
+
+            prop.setProperty("lastPath", path);
+
+            // save properties to project root folder
+            prop.storeToXML(output, null);
+            loadPath();
+
+
+        } catch (Exception ex) {
+            Platform.runLater(() -> Utils.createSimpleDialog("Zapis danych", "", "Błąd zapisu ustawień !\n" +
+                    "\"Sprawdź poprawność wprowadzonych danych !\"", Alert.AlertType.ERROR));
+
+
+        } finally {
+            if (output != null) {
+                try {
+                    output.close();
+                } catch (IOException e) {
+                    Platform.runLater(() -> Utils.createSimpleDialog("Zapis danych", "", "Błąd zapisuu ustawień !\n" +
+                            "Sprawdź poprawność wprowadzonych danych !", Alert.AlertType.ERROR));
+
+                }
+            }
+        }
+    }
+
+    // Otwieranie ustawień
+    private void settingsOpen() {
+
+        Parent root2 = null;
+        try {
+            root2 = FXMLLoader.load(getClass().getClassLoader().getResource("settingsView.fxml"));
+            Stage secondStage = new Stage();
+            secondStage.setTitle("Ustawienia");
+            secondStage.getIcons().add(new Image(getClass().getClassLoader().getResourceAsStream("logo.png")));//("file:logo.png"));
+            secondStage.setResizable(false);
+            secondStage.initStyle(StageStyle.DECORATED);
+            // secondStage.centerOnScreen();
+            secondStage.setScene(new Scene(root2, 585, 290));
+            secondStage.show();
+        } catch (IOException e) {
+            logger.debug(e.getMessage());
+            e.printStackTrace();
+        }
+
+
+    }
+
+    private void ProgressIndicator() {
+        // Parent root3 = null;
+        try {
+            RingProgressIndicator ringProgressIndicator = new RingProgressIndicator();
+            ringProgressIndicator.setRingWidth(20);
+            ringProgressIndicator.makeIndeterminate();
+            //root3 = FXMLLoader.load(getClass().getClassLoader().getResource("progressIndicator.fxml"));
+            StackPane root3 = new StackPane();
+            root3.getChildren().add(ringProgressIndicator);
+            root3.setPrefWidth(150.0);
+            root3.setPrefHeight(150.0);
+            Stage secondStage = new Stage();
+            secondStage.setTitle("Trwa import plików...");
+            //    secondStage.getIcons().add(new Image(getClass().getClassLoader().getResourceAsStream("logo.png")));//("file:logo.png"));
+            secondStage.setResizable(false);
+            secondStage.initStyle(StageStyle.UNDECORATED);
+            Scene scene = new Scene(root3, 200, 200);
+            scene.setFill(Color.BLUE);
+            secondStage.setScene(scene);
+            secondStage.setOpacity(0.5);
+            secondStage.show();
+            new WorkerThread(ringProgressIndicator).start();
+        } catch (Exception e) {
+            logger.debug(e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    class WorkerThread extends Thread {
+        RingProgressIndicator rpi;
+        int progress = 0;
+
+        public WorkerThread(RingProgressIndicator rpi) {
+            this.rpi = rpi;
+
+        }
+
+        @Override
+        public void run() {
+            while (true) {
+                try {
+                    Thread.sleep(200);
+                } catch (InterruptedException e) {
+                    logger.debug(e.fillInStackTrace());
+                }
+
+                Platform.runLater(() -> rpi.setProgress(progress));
+
+                progress += 1;
+                if (progress > 100) {
+                    break;
+                }
+            }
+
+
+        }
+
+    }
+
+    // O programie
+    private void about() {
+
+        Alert alertAbout = new Alert(Alert.AlertType.INFORMATION);
+        alertAbout.setTitle("O programie");
+        alertAbout.setHeaderText("");
+        alertAbout.setContentText("EDI RAJMAN\nCopyright by STREAMSOFT\nKontakt : lczereda@streamsoft.pl");
+
+        alertAbout.showAndWait();
+
+    }
+
+    // Test połączenia
+    private void testConnection() {
+
+        try {
+            FirebirdConnector connector = FirebirdConnector.getInstance();
+            connector.connectionTest();
+
+        } catch (Exception ex) {
+            logger.debug(ex.getMessage());
+            Utils.createSimpleDialog("Test połączenia z bazą danych", "", "Połączenie z bazą danych nie powiodło się !", Alert.AlertType.ERROR);
+        }
+
+    }
+
+    // Logowanie w oknie
+    private void addLog(String text) {
+        try {
+            textArea2.appendText(text + "\n");
+        } catch (Exception ex) {
+            logger.debug(ex.getMessage());
+        }
+    }
+
+    // Zaznaczanie / odznaczanie wszystkich faktur
+    private void CheckIfChecked(boolean value) {
+
+
+        if (value) {
+            listOfDocuments.getSelectionModel().selectAll();
+
+
+        }
+
+        //  listOfDocuments.getCellFactory().call(listOfDocuments);
+        else if (!value) {
+            listOfDocuments.getSelectionModel().clearSelection();
+        }
+    }
+
+    // Wybór pliku do importu - otwieranie okna ( nieaktywne)
+    private void chooseFile() {
+        //  progressIndicator.setDisable(false);
+        progressBar.setDisable(false);
+        textArea2.clear();
+        File recordsDir;
+
+
+        FileChooser fileChooser = new FileChooser();
+
+        fileChooser.setTitle("Wskaż lokalizację pliku");
+        FileChooser.ExtensionFilter extFilter1 =
+                new FileChooser.ExtensionFilter("Faktura EDI", "*.xml");
+
+        FileChooser.ExtensionFilter extFilter3 =
+                new FileChooser.ExtensionFilter("Wszystkie pliki", "*.*");
+
+        // fileChooser.getExtensionFilters().add(extFilter2);
+        fileChooser.getExtensionFilters().add(extFilter1);
+        fileChooser.getExtensionFilters().add(extFilter3);
+//        filePath=loadPath();
+//       if(!filePath.equals("")){
+        // JOptionPane.showMessageDialog(null,loadPath().toString());
+
+        String filePath = loadPath();
+
+        Path path = Paths.get(filePath);
+        if (Files.exists(path)) {
+            recordsDir = new File(loadPath());
+        } else {
+            recordsDir = new File(System.getProperty("user.home"));
+        }
+
+        File existDirectory = recordsDir.getParentFile();
+        try {
+            fileChooser.setInitialDirectory(existDirectory);
+        } catch (Exception ex) {
+            logger.debug(ex.getStackTrace());
+            fileChooser.setInitialDirectory(recordsDir);
+            JOptionPane.showMessageDialog(null, existDirectory);
+        }
+//       }
+
+
+        File file = fileChooser.showOpenDialog(loadButton.getScene().getWindow());
+        try
+
+        {
+            filePath = file.getAbsolutePath();
+            //  JOptionPane.showMessageDialog(null, filePath);
+            savePath(filePath);
+            //   int kat=filePath.lastIndexOf("\\");
+
+            extension = file.getName().substring(file.getName().lastIndexOf("."), file.getName().length());
+            //   Settings.setLastVisitedDirectory(filePath);
+            //   Settings.saveDirectory(filePath);
+
+            textFileImport.setText(filePath);
+            //runImport();
+            //  RowModel rowModel=new RowModel(new CheckBox(),filePath,)
+
+
+        } catch (
+                Exception ex)
+
+        {
+            logger.debug(ex.getMessage());
+            Utils.createSimpleDialog("Wskaż plik", "", "Nie wskazano pliku do zaimportowania !", Alert.AlertType.ERROR);
+        }
+    }
+
+
+    //  okay.addActionListener(new ActionListener() {
+//                            @Override
+//                            public void actionPerformed(ActionEvent e) {
+//                                JOptionPane pane = getOptionPane((JComponent)e.getSource());
+//                                pane.setValue(okay);
+//                            }
+//                        });
+//                        okay.setEnabled(false);
+//                        final JButton cancel = new JButton("Cancel");
+//                        cancel.addActionListener(new ActionListener() {
+//                            @Override
+//                            public void actionPerformed(ActionEvent e) {
+//                                JOptionPane pane = getOptionPane((JComponent)e.getSource());
+//                                pane.setValue(cancel);
+//                            }
+//                        });
+//                        Object[] options1 = { "Try This Number", "Choose A Random Number", "Quit" };
+//
+//                        JPanel panel = new JPanel();
+//                        panel.add(new JLabel("Enter number between 0 and 1000"));
+//                        JTextField textField = new JTextField(10);
+//                        panel.add(textField);
+//
+//                        int result = JOptionPane.showOptionDialog(null, panel, "Enter a Number",
+//                                JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE, null,
+//                                options1, null);
+//                        if (result == JOptionPane.YES_OPTION) {
+//                            JOptionPane.showMessageDialog(null, textField.getText());
+//                        }
+    // String[] weekdays = possibilities;
 
 ////  URUCHAMIANIE W RÓŻNTCH WĄTKACH - NIEUŻYWANE
 //    private void Run3() {
@@ -603,334 +1419,8 @@ public class MainController implements Initializable, Runnable {
 //        //t2.start();
 //    }
 
-
-    //  METODY DODATKOWE
-
-    // Tworzenie listy plików z folderu z fakturami i wyświetlanie ich na liście
-    private List<String> listOfInvoices(String path) {
-        File folder = new File(path);
-        List<String> list = new ArrayList<>();
-        File[] listOfFiles = folder.listFiles();
-
-        for (int i = 0; i < listOfFiles.length; i++) {
-            if ((listOfFiles[i].isFile()) && (listOfFiles[i].getName().contains("PL_INVOICE"))) {
-                list.add(listOfFiles[i].getName());
-                //   System.out.println(listOfFiles[i].getName());
-//            } else if (listOfFiles[i].isDirectory()) {
-//                System.out.println("Directory " + listOfFiles[i].getName());
-//            }
-            }
-
-        }
-        return list;
-    }
-
-    // Sprawdzanie zaznaczenia i zwraca listę zaznaczonych plików
-    private List<String> sprawdz(String item, boolean zaznacz, boolean all) {
-        if (zaznacz) {
-            invoices.add(item);
-            //   JOptionPane.showMessageDialog(null, invoices.toString() + " " + listOfXml.size());
-        } else if (!zaznacz) {
-            invoices.remove(item);
-            //     JOptionPane.showMessageDialog(null, invoices.toString() + " " + listOfXml.size());
-        }
-        return invoices;
-    }
-
-    // TWORZENIE LISTY ZAMDOST
-    private List<String> listOfZamdost(String path) {
-        List<String> zamowienia = new ArrayList<>();
-        DocumentInvoiceModel invoiceModel = null;
-
-        for (String faktura : faktury) {
-            invoiceModel = new DocumentInvoiceModel();
-            String path2 = path + faktura;
-            //  JOptionPane.showMessageDialog(null, path2);
-
-            //   invoiceModel = LoadXml(path2);
-            for (LineModel lineModel : invoiceModel.getLinesModel().getInvoiceLines()) {
-                String zamdost = lineModel.getLineOrderModel().getBuyerOrderNumber();
-                if (zamdost.contains("ZAMDOST")) {
-                    zamowienia.add(zamdost);
-
-                }
-            }
-            //    String zamdost = invoiceModel.getLinesModel().getInvoceLines().get(0).getLineOrderModel().getBuyerOrderNumber();
-
-
-        }
-
-
-        return zamowienia;
-    }
-
-    // ZAMIANA LISTY FAKTUR W LISTĘ MODELI FAKTUR
-    private List<DocumentInvoiceModel> LoadXml(List<String> invoicesList) {
-        List<DocumentInvoiceModel> listOfInvoicesXml = new ArrayList<>();
-        for (String invoice : invoicesList) {
-            String file = Settings.getListOfInvoices() + invoice;
-
-
-            //CartBpModel cartBpModel = new CartBpModel();
-            try {
-                InputStream reader = new FileInputStream(file);
-            } catch (FileNotFoundException e) {
-                logger.debug(e.getMessage());
-            }
-
-            File xmlFile = new File(file);
-            FileReader fr = null;
-            try {
-                fr = new FileReader(xmlFile);
-            } catch (FileNotFoundException e) {
-                logger.debug(e.getMessage());
-            }
-            BufferedReader br = new BufferedReader(fr);
-
-
-            String line = null;
-            try {
-                line = br.readLine();
-                // br.close();///////
-            } catch (IOException e) {
-                logger.debug(e.getMessage());
-            }
-            StringBuilder sb = new StringBuilder();
-
-            while (line != null) {
-                sb.append(line).append("\n");
-                try {
-                    line = br.readLine();
-                } catch (IOException e) {
-                    logger.debug(e.getMessage());
-                }
-            }
-
-            // static String plik = file;
-            String outXml = sb.toString();
-            documentInvoiceModel = JaxB.jaxbXMLToDocumentInvoiceModelObject(file);
-            listOfInvoicesXml.add(documentInvoiceModel);
-
-
-        }
-        return listOfInvoicesXml;
-    }
-
-
-    //////////// METODY DODATKOWE ///////////////
-    // Wczytanie ostatnio otwartego folderu
-    private String loadPath() {
-        String path;
-        Properties prop = new Properties();
-        InputStream input = null;
-        try {
-            input = new FileInputStream("path.properties");
-
-            if (input != null) {
-                // input=new FileInputStream("path.properties");
-                //   System.out.println("Brak pliku z ustawieniami");
-                //    savePath(path);
-                prop.loadFromXML(input);
-                path = prop.getProperty("lastPath");
-                return path;
-            }
-            if (input == null) {
-                return "c:";
-            }
-
-
-        } catch (Exception ex) {
-            return null;//  Utils.createSimpleDialog("Odczyt danych", "", "Błąd odczytu ustawień !", Alert.AlertType.ERROR);
-
-
-        } finally {
-            if (input != null) {
-                try {
-                    input.close();
-                } catch (IOException e) {
-                    logger.debug(e.getMessage());
-                    return null;//  Utils.createSimpleDialog("Odczyt danych", "", "Błąd odczytu ustawień !", Alert.AlertType.ERROR);
-
-                }
-            }
-        }
-        return null;
-    }
-
-    // Zapis ostatnio otwartego folderu
-    private void savePath(String path) {
-
-        Properties prop = new Properties();
-        OutputStream output = null;
-
-        try {
-
-            output = new FileOutputStream("path.properties");
-
-            prop.setProperty("lastPath", path);
-
-            // save properties to project root folder
-            prop.storeToXML(output, null);
-            loadPath();
-
-
-        } catch (Exception ex) {
-            Platform.runLater(() -> Utils.createSimpleDialog("Zapis danych", "", "Błąd zapisu ustawień !\n" +
-                    "\"Sprawdź poprawność wprowadzonych danych !\"", Alert.AlertType.ERROR));
-
-
-        } finally {
-            if (output != null) {
-                try {
-                    output.close();
-                } catch (IOException e) {
-                    Platform.runLater(() -> Utils.createSimpleDialog("Zapis danych", "", "Błąd zapisuu ustawień !\n" +
-                            "Sprawdź poprawność wprowadzonych danych !", Alert.AlertType.ERROR));
-
-                }
-            }
-        }
-    }
-
-    // Otwieranie ustawień
-    private void settingsOpen() {
-
-        Parent root2 = null;
-        try {
-            root2 = FXMLLoader.load(getClass().getClassLoader().getResource("settingsView.fxml"));
-            Stage secondStage = new Stage();
-            secondStage.setTitle("Ustawienia");
-            secondStage.getIcons().add(new Image(getClass().getClassLoader().getResourceAsStream("logo.png")));//("file:logo.png"));
-            secondStage.setResizable(false);
-            secondStage.initStyle(StageStyle.DECORATED);
-            // secondStage.centerOnScreen();
-            secondStage.setScene(new Scene(root2, 585, 290));
-            secondStage.show();
-        } catch (IOException e) {
-            logger.debug(e.getMessage());
-            e.printStackTrace();
-        }
-
-
-    }
-
-    // O programie
-    private void about() {
-
-        Alert alertAbout = new Alert(Alert.AlertType.INFORMATION);
-        alertAbout.setTitle("O programie");
-        alertAbout.setHeaderText("");
-        alertAbout.setContentText("EDI INTER-ELEKTRO\nCopyright by STREAMSOFT\nKontakt : lczereda@streamsoft.pl");
-
-        alertAbout.showAndWait();
-
-    }
-
-    // Test połączenia
-    private void testConnection() {
-
-        try {
-            FirebirdConnector connector = FirebirdConnector.getInstance();
-            connector.connectionTest();
-
-        } catch (Exception ex) {
-            logger.debug(ex.getMessage());
-            Utils.createSimpleDialog("Test połączenia z bazą danych", "", "Połączenie z bazą danych nie powiodło się !", Alert.AlertType.ERROR);
-        }
-
-    }
-
-    // Logowanie w oknie
-    private void addLog(String text) {
-        try {
-            textArea2.appendText(text + "\n");
-        } catch (Exception ex) {
-            logger.debug(ex.getMessage());
-        }
-    }
-
-    // Zaznaczanie / odznaczanie wszystkich faktur
-    private void CheckIfChecked(boolean value) {
-
-
-        if (value) {
-            listOfDocuments.getSelectionModel().selectAll();
-
-
-        }
-
-        //  listOfDocuments.getCellFactory().call(listOfDocuments);
-        else if (!value) {
-            listOfDocuments.getSelectionModel().clearSelection();
-        }
-    }
-
-    // Wybór pliku do importu - otwieranie okna ( nieaktywne)
-    private void chooseFile() {
-        //  progressIndicator.setDisable(false);
-        progressBar.setDisable(false);
-        textArea2.clear();
-        File recordsDir = new File(System.getProperty("user.home"));
-
-
-        FileChooser fileChooser = new FileChooser();
-
-        fileChooser.setTitle("Wskaż lokalizację pliku");
-        FileChooser.ExtensionFilter extFilter1 =
-                new FileChooser.ExtensionFilter("Faktura EDI", "*.xml");
-
-        FileChooser.ExtensionFilter extFilter3 =
-                new FileChooser.ExtensionFilter("Wszystkie pliki", "*.*");
-
-        // fileChooser.getExtensionFilters().add(extFilter2);
-        fileChooser.getExtensionFilters().add(extFilter1);
-        fileChooser.getExtensionFilters().add(extFilter3);
-//        filePath=loadPath();
-//       if(!filePath.equals("")){
-        // JOptionPane.showMessageDialog(null,loadPath().toString());
-        try {
-            recordsDir = new File(loadPath());
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        if (recordsDir == null) {
-            recordsDir = new File(System.getProperty("user.home"));
-
-        }
-
-        File existDirectory = recordsDir.getParentFile();
-        fileChooser.setInitialDirectory(existDirectory);
-//       }
-
-        File file = fileChooser.showOpenDialog(loadButton.getScene().getWindow());
-        try {
-            filePath = file.getAbsolutePath();
-            //  JOptionPane.showMessageDialog(null, filePath);
-            savePath(filePath);
-            //   int kat=filePath.lastIndexOf("\\");
-
-            extension = file.getName().substring(file.getName().lastIndexOf("."), file.getName().length());
-            //   Settings.setLastVisitedDirectory(filePath);
-            //   Settings.saveDirectory(filePath);
-
-            textFileImport.setText(filePath);
-            //runImport();
-
-
-        } catch (Exception ex) {
-            logger.debug(ex.getMessage());
-            Utils.createSimpleDialog("Wskaż plik", "", "Nie wskazano pliku do zaimportowania !", Alert.AlertType.ERROR);
-        }
-    }
-
-    @Override
-    public void run() {
-
-    }
-
-
-    // Stare metody uruchamiające import
-    //////////////////URUCHAMIANIE WSZUSYKICH 3 METOD
+// Stare metody uruchamiające import
+//////////////////URUCHAMIANIE WSZUSYKICH 3 METOD
 
 
 //    private InvoiceModel ImportXml(DocumentInvoiceModel xmlFile, String fileName) {
@@ -1027,15 +1517,15 @@ public class MainController implements Initializable, Runnable {
 //        try {
 //            documentInvoiceDao.InsertNewDocumentNumber(invoiceModel);
 //    //    } catch (Exception ex) {
-    //       JOptionPane.showMessageDialog(null, "Błąd zapisu do tabeli zaimportowanego pliku : " + fileName, "Błąd importu 2", JOptionPane.ERROR_MESSAGE);
-    //  Odswiez();
-    //    }
+//       JOptionPane.showMessageDialog(null, "Błąd zapisu do tabeli zaimportowanego pliku : " + fileName, "Błąd importu 2", JOptionPane.ERROR_MESSAGE);
+//  Odswiez();
+//    }
 
-    //  if (wypychacz()) {
-    // int lol= PowiazPz(invoiceModel);
-    //    documentsToConnectWithPZ.add(nrdok2);
-    //  fileToMove.add(fileName);
-    //  int pz=documentInvoiceDao.GetIdNaglPZ(nrdok2);
+//  if (wypychacz()) {
+// int lol= PowiazPz(invoiceModel);
+//    documentsToConnectWithPZ.add(nrdok2);
+//  fileToMove.add(fileName);
+//  int pz=documentInvoiceDao.GetIdNaglPZ(nrdok2);
 //        Runnable runnable = new Runnable() {
 //            @Override
 //            public void run() {
@@ -1045,7 +1535,7 @@ public class MainController implements Initializable, Runnable {
 //        Platform.runLater(runnable);
 //        JOptionPane.showMessageDialog(null, "Poprawnie zaimportowano plik " + fileName);
 //                    for (String pz :)
-    //   Odswiez();
+//   Odswiez();
 //        return invoiceModel;
 //
 //        } else if (!wypychacz()) {
@@ -1055,8 +1545,8 @@ public class MainController implements Initializable, Runnable {
 //        }
 
 
-    //  return null;
-    //   }
+//  return null;
+//   }
 
 //    String nip1 = documentInvoiceModel.getInvoicePartiesModel().getSellerModel().getTaxID();
 //    String iln1 = documentInvoiceModel.getInvoicePartiesModel().getSellerModel().getILN();
@@ -1307,13 +1797,13 @@ public class MainController implements Initializable, Runnable {
 //
 
 
-    //   System.out.println(sb);
-    //  JOptionPane.showMessageDialog(null,documentInvoiceModel.getHeaderModel().getInvoiceDate());
+//   System.out.println(sb);
+//  JOptionPane.showMessageDialog(null,documentInvoiceModel.getHeaderModel().getInvoiceDate());
 //        int stop = outXml.lastIndexOf("<data>");
 //
 //        int end = stop;
 //        String xml = outXml.substring(stop, outXml.length());
-    //     System.out.println(outXml);
+//     System.out.println(outXml);
 //        byte data[] = outXml.getBytes();
 //        String file2 = null;
 //        FileOutputStream out = null;
@@ -1336,15 +1826,15 @@ public class MainController implements Initializable, Runnable {
 //            logger.debug(e.getMessage());
 //        }
 
-    // FileWriter fileWriter=new FileWriter(plik,);
-    //cartBpModel = JaxB.jaxbCartBpModelXMLToObject(file2);
+// FileWriter fileWriter=new FileWriter(plik,);
+//cartBpModel = JaxB.jaxbCartBpModelXMLToObject(file2);
 
-    // JOptionPane.showMessageDialog(null, documentInvoiceModel.getHeaderModel().getInvoiceDate());
+// JOptionPane.showMessageDialog(null, documentInvoiceModel.getHeaderModel().getInvoiceDate());
 
 //        if (!cartBpModel.getEan().isEmpty()) {
 //            cartBpModel.setEan(cartBpModel.getEan().replace("e", ""));
 //        }
-    //   textArea2.appendText(documentInvoiceModel.toString());
+//   textArea2.appendText(documentInvoiceModel.toString());
 
 
 //
@@ -1576,7 +2066,7 @@ public class MainController implements Initializable, Runnable {
 //    }
 
 
-    //    private void runImport() {
+//    private void runImport() {
 //        if (!textFileImport.getText().isEmpty()) {
 //            textArea2.clear();
 //            progressBar.setProgress(0.0d);
@@ -1600,7 +2090,7 @@ public class MainController implements Initializable, Runnable {
 ////       progressIndicator.progressProperty().bind(task.progressProperty());
 //        new Thread(task).start();
 //    }
-    //   try {
+//   try {
 //            Runtime.getRuntime().exec("cmd /b start \"\"C:\\Users\\lukasz.czereda\\Desktop\\EDI_IMPORT\\start.bat");
 //            ProcessBuilder pb = new ProcessBuilder("cmd", "/c",
 //                    "C:\\Users\\lukasz.czereda\\Desktop\\EDI_IMPORT\\URZZEW.lnk");
