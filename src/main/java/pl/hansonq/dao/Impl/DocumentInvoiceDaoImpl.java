@@ -1,52 +1,41 @@
 package pl.hansonq.dao.Impl;
 
-import jdk.nashorn.internal.scripts.JO;
-import org.apache.commons.net.ntp.TimeStamp;
 import org.apache.log4j.Logger;
-import pl.hansonq.controllers.MainController;
+import org.apache.log4j.xml.DOMConfigurator;
 import pl.hansonq.dao.DocumentInvoiceDao;
-import pl.hansonq.models.DocumentInvoiceModel;
+import pl.hansonq.models.CartModel;
 import pl.hansonq.models.InvoiceModel.CartModelEdi;
 import pl.hansonq.models.InvoiceModel.InvoiceModel;
-import pl.hansonq.models.InvoiceModel.OrderModel;
 import pl.hansonq.utils.FirebirdConnector;
-import pl.hansonq.utils.Settings;
+import pl.hansonq.utils.Preferences;
 
 import javax.swing.*;
 import java.math.BigDecimal;
 import java.sql.*;
-import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
     final static Logger logger = Logger.getLogger(DocumentInvoiceDaoImpl.class);
 
+    public DocumentInvoiceDaoImpl() {
+        DOMConfigurator.configure("log4j.xml");
+    }
 
     FirebirdConnector conn = FirebirdConnector.getInstance();
     Connection conect = conn.getConnection();
 
     private int blad;
     private int id_poz;
-
-
-    @Override
-    public boolean ImportPz(DocumentInvoiceModel documentInvoiceModel) {
-        return false;
-    }
-
-    @Override
-    public List<String> getZamdost() {
-        return null;
-    }
+    private int id_kartoteka;
+    public static int new_kart;
+    private boolean addNewCart = false;
 
     @Override
     public List<Integer> getKontrah(String nip, String iln) {
-        PreparedStatement statement2 = null;
+        CallableStatement statement2 = null;
         List<Integer> lista = new ArrayList<>();
         int idKontrah = 0;
         int nrKontrah = 0;
@@ -54,56 +43,18 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
         try {
             conect.setAutoCommit(true);
             //   conn.connectionTest();
-            statement2 = conect.prepareStatement("select K.ID_KONTRAH, K.NRKONTRAH\n" +
-                    "from KONTRAH K\n" +
-                    "join DANEKONTRAH DK on DK.ID_KONTRAH = K.ID_KONTRAH\n" +
-                    "where K.BAZAKONTRAH = 0 and\n" +
-                    "      DK.BAZADANEKONTRAH = 1 and\n" +
-                    "      DK.NIPW =?");// trim(replace(?, '-', ''))");
+            statement2 = conect.prepareCall("{call XXX_LC_EDI_GETKONTRAH(?,?,?,?)}");// trim(replace(?, '-', ''))");
+            statement2.registerOutParameter(3, Types.INTEGER);
+            statement2.registerOutParameter(4, Types.INTEGER);
             statement2.setString(1, nip);
-            ResultSet rs = statement2.executeQuery();
-            // statement2.close();
-            while (rs.next()) {
-                //  JOptionPane.showMessageDialog(null,"YYEYEYYEE");
-                idKontrah = rs.getInt(1);
-                nrKontrah = rs.getInt(2);
-                lista.add(idKontrah);
-                lista.add(nrKontrah);
-                //  JOptionPane.showMessageDialog(null, lista.size());
-                //  kontrah = new int[]{idKontrah, nrKontrah};
+            statement2.setString(2, iln);
+            statement2.execute();
+            idKontrah = statement2.getInt(3);
+            nrKontrah = statement2.getInt(4);
+            lista.add(idKontrah);
+            lista.add(nrKontrah);
 
-                // System.out.println(lista.get(0)+"  "+lista.get(1));
-
-
-            }
-
-
-//            if (rs.getInt(1) == 0) {
-//
-//                statement2 = conect.prepareStatement("select K.ID_KONTRAH, K.NRKONTRAH\n" +
-//                        "from KONTRAH K\n" +
-//                        "join DANEKONTRAH DK on DK.ID_KONTRAH = K.ID_KONTRAH\n" +
-//                        "\n" +
-//                        "where K.BAZAKONTRAH = 0 and\n" +
-//                        "      DK.BAZADANEKONTRAH = 1 and\n" +
-//                        "      K.GLOBALNRLOKALIZ  = trim(replace(?, '-', ''))");
-//                statement2.setString(1, iln);
-//                ResultSet rs2 = statement2.executeQuery();
-//                //  statement2.close();
-//                while (rs2.next()) {
-//                    idKontrah = rs.getInt(1);
-//                    nrKontrah = rs.getInt(2);
-//                    lista.add(idKontrah);
-//                    lista.add(nrKontrah);
-//                    // JOptionPane.showMessageDialog(null, lista.get(1));
-//                    //  kontrah = new int[]{idKontrah, nrKontrah};
-//
-//                    // System.out.println(lista.get(0)+"  "+lista.get(1));
-//
-//
-//                }
-//            }
-
+//JOptionPane.showMessageDialog(null, lista.get(0)+" "+ lista.get(1));
             return lista;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -130,63 +81,6 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
 
     }
 
-    @Override
-    public List<Integer> getKontrahILN(String nip, String iln) {
-        PreparedStatement statement2 = null;
-        List<Integer> lista = new ArrayList<>();
-        int idKontrah = 0;
-        int nrKontrah = 0;
-        int[] kontrah = null;
-        try {
-            conect.setAutoCommit(true);
-            //   conn.connectionTest();
-            statement2 = conect.prepareStatement("select K.ID_KONTRAH, K.NRKONTRAH\n" +
-                    "from KONTRAH K\n" +
-                    "join DANEKONTRAH DK on DK.ID_KONTRAH = K.ID_KONTRAH\n" +
-                    "\n" +
-                    "where K.BAZAKONTRAH = 0 and\n" +
-                    "      DK.BAZADANEKONTRAH = 1 and\n" +
-                    "      K.GLOBALNRLOKALIZ  = trim(replace(?, '-', ''))");
-            statement2.setString(1, iln);
-            ResultSet rs2 = statement2.executeQuery();
-            //  statement2.close();
-            while (rs2.next()) {
-                idKontrah = rs2.getInt(1);
-                nrKontrah = rs2.getInt(2);
-                lista.add(idKontrah);
-                lista.add(nrKontrah);
-            }
-            return lista;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            logger.debug(e.getMessage());
-            return null;
-            //Utils.createSimpleDialog("Błąd importu danych", "", "Błąd podczas usuwania kartoteki o indeksie "+cartModel.getIndeks()+", komunikat błędu :\n" + e.getMessage(), Alert.AlertType.ERROR);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            logger.debug(e.getMessage());
-            // Utils.createSimpleDialog("Błąd importu danych", "", "Błąd podczas usuwania kartoteki o indeksie "+cartModel.getIndeks()+", komunikat błędu :\n" + e.getMessage(), Alert.AlertType.ERROR);
-            //  return false;
-            return null;
-        } finally {
-            try {
-                statement2.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-                logger.debug(e.getMessage());
-            }
-            return lista;
-        }
-
-
-    }
-
-    // Sprawdza czy dokument
-    @Override
-    public boolean CheckIfExist(DocumentInvoiceModel documentInvoiceModel) {
-        return false;
-    }
 
     @Override
     public int GetKartId(String ean) {
@@ -292,21 +186,21 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
         LocalDateTime dateTime = LocalDateTime.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         String timestamp = dateTime.format(formatter);
-        //  JOptionPane.showMessageDialog(null, timestamp);
+        //   String timestamp = invoiceModel.getInvoiceDate();
         try {
-            CallableStatement statement = conect.prepareCall("{call XXX_LC_URZZEWNAGL_ADD_7(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,)}");
+            CallableStatement statement = conect.prepareCall("{call XXX_LC_EDI_URZZEWNAGL_ADD_7(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)}");
 
             statement.registerOutParameter(37, Types.INTEGER);
             statement.registerOutParameter(38, Types.INTEGER);
             statement.setInt(1, 1);
-            statement.setString(2, Settings.getKodUrzZew());
+            statement.setString(2, Preferences.getPreferences().getKodUrzZew());
             statement.setNull(3, Types.VARCHAR);
             statement.setNull(4, Types.INTEGER);
             statement.setString(5, invoiceModel.getNip());
             statement.setString(6, "");
             statement.setInt(7, 1);
             statement.setString(8, timestamp);//timestamp
-            statement.setString(9, "PZ");
+            statement.setString(9, "FVZAK");
             statement.setString(10, invoiceModel.getInvoiceNumber());
             statement.setNull(11, Types.TIMESTAMP);
             statement.setNull(12, Types.VARCHAR);      //timestamp
@@ -410,7 +304,7 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
         int id_poz = 0;
         int blad = 0;
         try {
-            CallableStatement statement = conect.prepareCall("{call XXX_LC_URZZEWPOZ_ADD_9(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)}");
+            CallableStatement statement = conect.prepareCall("{call XXX_LC_EDI_URZZEWPOZ_ADD_9(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?  )}");
 
             statement.registerOutParameter(25, Types.INTEGER);
             statement.registerOutParameter(26, Types.INTEGER);
@@ -438,20 +332,20 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
             statement.setInt(22, 1);
             statement.setNull(23, Types.INTEGER);
             statement.setNull(24, Types.VARCHAR);
-
-            ;
+            // JOptionPane.showMessageDialog(null, cartModelEdi);
 
             statement.execute();
 
             try {
+
                 id_poz = statement.getInt(25);
                 blad = statement.getInt(26);
-                // JOptionPane.showMessageDialog(null,id_kartoteka+" ,"+"nowa :"+new_kart);
+                //    JOptionPane.showMessageDialog(null,id_poz+" ,"+blad);
 
 
             } catch (Exception ex) {
                 ex.printStackTrace();
-                logger.debug(ex.getMessage() + "\nBłąd numer : " + blad);
+                logger.debug(ex.getMessage() + "\nBłąd numer : " + blad + ", " + id_poz);
                 //id_nagl = 0;
 
             }
@@ -473,17 +367,20 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
     }
 
     @Override
-    public boolean PowiazPZ(InvoiceModel invoiceModel, OrderModel orderModel) {
+    public boolean PowiazPZ(int zam, int pz) {
 
         try {
-            // CallableStatement statement = conect.prepareCall("{call XXX_LC_EDI_UTWORZPOW(?,?)}");
-            JOptionPane.showMessageDialog(null, "LOL");
+            conect.setAutoCommit(true);
+            CallableStatement statement = conect.prepareCall("{call XXX_LC_EDI_UTWORZPOW(?,?)}");
+            statement.setInt(1, zam);
+            statement.setInt(2, pz);
+            statement.executeUpdate();
             return true;
 
-//        } catch (SQLException ex) {
-//            ex.printStackTrace();
-//            logger.debug(ex.getMessage());
-//            //   JOptionPane.showMessageDialog(null, "Kartot eka o numerze " + id_kartoteka + " posiada nieuzupełnione wszystkie wymagane pola !", "Bład", JOptionPane.ERROR_MESSAGE);
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            logger.debug(ex.getMessage());
+            //   JOptionPane.showMessageDialog(null, "Kartot eka o numerze " + id_kartoteka + " posiada nieuzupełnione wszystkie wymagane pola !", "Bład", JOptionPane.ERROR_MESSAGE);
         } catch (NullPointerException ex) {
             logger.debug(ex.getMessage());
             ex.printStackTrace();
@@ -499,14 +396,14 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
     public List<String> getMagazyn() {
         PreparedStatement statement2 = null;
         List<String> magazyny = new ArrayList<>();
-
+        //  magazyny.add("MAGAZYN");
         try {
             conect.setAutoCommit(true);
 
             statement2 = conect.prepareStatement("select M.NAZWAMAG\n" +
-                    "from MAGAZYN M ;");
+                    "from MAGAZYN M where M.AKTYWNY = 1");
             ResultSet rs = statement2.executeQuery();
-
+            magazyny.clear();
             while (rs.next()) {
                 magazyny.add(rs.getString(1));
             }
@@ -537,45 +434,17 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
     }
 
     @Override
-    public String GetKartIndeks(String ean) {
-        PreparedStatement statement2 = null;
-        //PreparedStatement statement3 = null;
+    public String GetKartIndeksByEan(String ean) {
+        CallableStatement statement2 = null;
         String indeks = "";
-        //   int[] kontrah = null;
         try {
             conect.setAutoCommit(true);
-            //   conn.connectionTest();
-            statement2 = conect.prepareStatement("select K.INDEKS\n" +
-                    "from KARTOTEKA K\n" +
-                    "left join EAN E on E.ID_KARTOTEKA = K.ID_KARTOTEKA\n" +
-                    "where E.EAN =?");// trim(replace(?, '-', ''))");
+            statement2 = conect.prepareCall("{call XXX_LC_EDI_GETKARTINDEKS (?,?)}");// trim(replace(?, '-', ''))");
+            statement2.registerOutParameter(2, Types.VARCHAR);
             statement2.setString(1, ean);
-            ResultSet rs = statement2.executeQuery();
-            // statement2.close();
-            //statement2 = null;
-
-            while (rs.next()) {
-                ///   JOptionPane.showMessageDialog(null,indeks);
-                indeks = rs.getString(1);
-            }
-            if ((indeks.equals("")) || (indeks.isEmpty()) || (indeks == null)) {
-                statement2 = conect.prepareStatement("select K.INDEKS\n" +
-                        "from KARTOTEKA K\n" +
-                        "where K.INDEKS =?");// trim(replace(?, '-', ''))");
-                statement2.setString(1, ean.trim());
-                ResultSet rs2 = statement2.executeQuery();
-                // statement2 = null;
-                while (rs2.next()) {
-                    ///   JOptionPane.showMessageDialog(null,indeks);
-                    String indeks2 = rs2.getString(1);
-
-                    return indeks2;
-                }
-            } else {
-                return indeks;
-            }
-
-
+            statement2.execute();
+            indeks = statement2.getString(2);
+            return indeks;
         } catch (SQLException e) {
             e.printStackTrace();
             logger.debug(e.getMessage());
@@ -597,7 +466,7 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
             }
             // return indeks;
         }
-        return null;
+
     }
 
     @Override
@@ -646,7 +515,7 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
     @Override
     public boolean CheckIfDocumentExists(String nrdok) {
         PreparedStatement statement2 = null;
-        String urzzewCode = Settings.getKodUrzZew();
+        String urzzewCode = Preferences.getPreferences().getKodUrzZew();
         int idUrzZewX = GetUrzzewId(urzzewCode);
         //    JOptionPane.showMessageDialog(null, idUrzZewX);
         //   int[] kontrah = null;
@@ -658,7 +527,7 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
                     "from URZZEWNAGL N\n" +
                     "inner join URZZEW Z on (N.ID_URZZEW = Z.ID_URZZEW)\n" +
                     "where ((Z.ID_URZZEW = ?) and\n" +
-                    "      (N.ZREALZIOWANY = 1))and N.ODB_NRDOK =?");// trim(replace(?, '-', ''))");
+                    "      ((N.ZREALZIOWANY = 1)or(N.ZREALZIOWANY = 0)))and N.ODB_NRDOK =?");// trim(replace(?, '-', ''))");
             statement2.setInt(1, idUrzZewX);
             statement2.setString(2, nrdok);
             ResultSet rs = statement2.executeQuery();
@@ -775,7 +644,8 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
     @Override
     public boolean DeleteFromBufor() {
         PreparedStatement statement2 = null;
-        String urzzewCode = Settings.getKodUrzZew();
+        String urzzewCode = Preferences.getPreferences().getKodUrzZew();
+
         int idUrzZewX = GetUrzzewId(urzzewCode);
 
         try {
@@ -824,26 +694,18 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
 
     @Override
     public int GetIdNaglPZ(String number) {
-        PreparedStatement statement2 = null;
+        CallableStatement statement2 = null;
         int id_nagl = 0;
 
         try {
             conect.setAutoCommit(true);
             //   conn.connectionTest();
-            statement2 = conect.prepareStatement("select N.ID_NAGL\n" +
-                    "from NAGL N\n" +
-                    "where N.NRDOKZEW = ? and\n" +
-                    "      N.DATADOK = current_date  ");// trim(replace(?, '-', ''))");
+            statement2 = conect.prepareCall("{call XXX_LC_EDI_GETPZ(?,?)}");
+            statement2.registerOutParameter(2, Types.INTEGER);// trim(replace(?, '-', ''))");
             statement2.setString(1, number);
-            ResultSet rs = statement2.executeQuery();
-            // statement2.close();
-            while (rs.next()) {
-                id_nagl = rs.getInt(1);
-
-
-            }
-
-
+            statement2.execute();
+            id_nagl = statement2.getInt(2);
+            return id_nagl;
         } catch (SQLException e) {
             e.printStackTrace();
             logger.debug(e.getMessage());
@@ -863,26 +725,19 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
 
     @Override
     public int GetIdNaglZAMDOST(String number, int idKontrah) {
-        PreparedStatement statement2 = null;
+        CallableStatement statement2 = null;
         int id_nagl = 0;
 
         try {
             conect.setAutoCommit(true);
             //   conn.connectionTest();
-            statement2 = conect.prepareStatement("select N.ID_NAGL\n" +
-                    "from NAGL N\n" +
-                    "where N.NRDOKWEW LIKE ? and N.ID_KONTRAH=? and \n" +
-                    "      extract(year from N.DATADOK) = 2018");// trim(replace(?, '-', ''))");
-            statement2.setString(1, number + "%");
+            statement2 = conect.prepareCall("{call XXX_LC_EDI_GETZAMDOST(?,?,?)}");
+            statement2.registerOutParameter(3, Types.INTEGER);// trim(replace(?, '-', ''))");
+            statement2.setString(1, number);
             statement2.setInt(2, idKontrah);
-            ResultSet rs = statement2.executeQuery();
-            // statement2.close();
-            while (rs.next()) {
-                id_nagl = rs.getInt(1);
-
-                //   JOptionPane.showMessageDialog(null, nrdok2);
-
-            }
+            //  ResultSet rs = statement2.executeQuery();
+            statement2.execute();
+            id_nagl = statement2.getInt(3);
             return id_nagl;
 
         } catch (SQLException e) {
@@ -910,6 +765,1214 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
         }
         //  return id_nagl;
     }
+
+    @Override
+    public List<String> Kartoteki(String nazwa) {
+        PreparedStatement statement = null;
+        List<String> lista = new ArrayList<>();
+
+        try {
+            conect.setAutoCommit(true);
+            //   conn.connectionTest();
+            statement = conect.prepareStatement("select K.NAZWADL\n" +
+                    "  from KARTOTEKA K\n" +
+                    "  where upper(K.nazwadl) like '%'||upper(?)||'%'");
+            statement.setString(1, nazwa);
+            ResultSet rs = statement.executeQuery();
+            while (rs.next()) {
+                lista.add(rs.getString(1));
+            }
+            return lista;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            logger.debug(e.getMessage());
+
+            //Utils.createSimpleDialog("Błąd importu danych", "", "Błąd podczas usuwania kartoteki o indeksie "+cartModel.getIndeks()+", komunikat błędu :\n" + e.getMessage(), Alert.AlertType.ERROR);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.debug(e.getMessage());
+            // Utils.createSimpleDialog("Błąd importu danych", "", "Błąd podczas usuwania kartoteki o indeksie "+cartModel.getIndeks()+", komunikat błędu :\n" + e.getMessage(), Alert.AlertType.ERROR);
+            //  return false;
+
+
+        }
+        return null;
+    }
+
+    @Override
+    public String GetKartIndeksPSB(String numerPSB) {
+        return null;
+    }
+
+    @Override
+    public String GetKartIndeksByName(String kartName) {
+        PreparedStatement statement = null;
+        String kartIndeks = "";
+
+        try {
+            conect.setAutoCommit(true);
+            //   conn.connectionTest();
+            statement = conect.prepareStatement("select first 1 K.INDEKS\n" +
+                    "  from KARTOTEKA K\n" +
+                    "  where upper(K.nazwadl) = upper(?)");
+            statement.setString(1, kartName);
+            ResultSet rs = statement.executeQuery();
+            while (rs.next()) {
+                kartIndeks = rs.getString(1);
+            }
+            //JOptionPane.showMessageDialog(null,kartIndeks);
+            return kartIndeks;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            logger.debug(e.getMessage());
+
+            //Utils.createSimpleDialog("Błąd importu danych", "", "Błąd podczas usuwania kartoteki o indeksie "+cartModel.getIndeks()+", komunikat błędu :\n" + e.getMessage(), Alert.AlertType.ERROR);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.debug(e.getMessage());
+            // Utils.createSimpleDialog("Błąd importu danych", "", "Błąd podczas usuwania kartoteki o indeksie "+cartModel.getIndeks()+", komunikat błędu :\n" + e.getMessage(), Alert.AlertType.ERROR);
+            //  return false;
+
+
+        }
+        return null;
+    }
+
+    @Override
+    public String GetKartIndeksByIndeks(String indeks) {
+        PreparedStatement statement = null;
+        String kartIndeks = "";
+
+        try {
+            conect.setAutoCommit(true);
+            //   conn.connectionTest();
+            statement = conect.prepareStatement("select first 1 K.INDEKS\n" +
+                    "  from KARTOTEKA K\n" +
+                    "  where upper(K.INDEKS) = upper(?)");
+            statement.setString(1, indeks);
+            ResultSet rs = statement.executeQuery();
+            while (rs.next()) {
+                kartIndeks = rs.getString(1);
+            }
+            return kartIndeks;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            logger.debug(e.getMessage());
+
+            //Utils.createSimpleDialog("Błąd importu danych", "", "Błąd podczas usuwania kartoteki o indeksie "+cartModel.getIndeks()+", komunikat błędu :\n" + e.getMessage(), Alert.AlertType.ERROR);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.debug(e.getMessage());
+            // Utils.createSimpleDialog("Błąd importu danych", "", "Błąd podczas usuwania kartoteki o indeksie "+cartModel.getIndeks()+", komunikat błędu :\n" + e.getMessage(), Alert.AlertType.ERROR);
+            //  return false;
+
+
+        }
+        return null;
+    }
+
+    @Override
+    public String GetKartIndeksBySupplierCode(String code) {
+        PreparedStatement statement = null;
+        String kartIndeks = "";
+        int idCechyPsb = Integer.valueOf(Preferences.getPreferences().getIdCechaPSB());
+
+        try {
+            conect.setAutoCommit(true);
+            //   conn.connectionTest();
+            statement = conect.prepareStatement("select FIRST 1 K.INDEKS\n" +
+                    "from KARTOTEKA K\n" +
+                    "left join WYSTCECHKART WK on WK.ID_KARTOTEKA = K.ID_KARTOTEKA\n" +
+                    "where WK.ID_CECHADOKK = ? and\n" +
+                    "      (WK.WARTOSC is not null) and\n" +
+                    "      (WK.WARTOSC <> '') and\n" +
+                    "      upper(WK.WARTOSC) = upper(?) ");
+            statement.setInt(1, idCechyPsb);
+            statement.setString(2, code);
+            ResultSet rs = statement.executeQuery();
+            while (rs.next()) {
+                kartIndeks = rs.getString(1);
+            }
+            return kartIndeks;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            logger.debug(e.getMessage());
+
+            //Utils.createSimpleDialog("Błąd importu danych", "", "Błąd podczas usuwania kartoteki o indeksie "+cartModel.getIndeks()+", komunikat błędu :\n" + e.getMessage(), Alert.AlertType.ERROR);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.debug(e.getMessage());
+            // Utils.createSimpleDialog("Błąd importu danych", "", "Błąd podczas usuwania kartoteki o indeksie "+cartModel.getIndeks()+", komunikat błędu :\n" + e.getMessage(), Alert.AlertType.ERROR);
+            //  return false;
+
+
+        }
+        return null;
+    }
+
+    @Override
+    public String GetKartNameById(int idKart) {
+        PreparedStatement statement = null;
+        String kartName = "";
+
+        try {
+            conect.setAutoCommit(true);
+            //   conn.connectionTest();
+            statement = conect.prepareStatement("select FIRST 1 K.NAZWADL\n" +
+                    "from KARTOTEKA K\n" +
+                    "where K.ID_KARTOTEKA = ?");
+            statement.setInt(1, idKart);
+            ResultSet rs = statement.executeQuery();
+            while (rs.next()) {
+                kartName = rs.getString(1);
+            }
+            return kartName;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            logger.debug(e.getMessage());
+
+            //Utils.createSimpleDialog("Błąd importu danych", "", "Błąd podczas usuwania kartoteki o indeksie "+cartModel.getIndeks()+", komunikat błędu :\n" + e.getMessage(), Alert.AlertType.ERROR);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.debug(e.getMessage());
+            // Utils.createSimpleDialog("Błąd importu danych", "", "Błąd podczas usuwania kartoteki o indeksie "+cartModel.getIndeks()+", komunikat błędu :\n" + e.getMessage(), Alert.AlertType.ERROR);
+            //  return false;
+
+
+        }
+        return null;
+    }
+
+    @Override
+    public int GetKartIdByIndeks(String indeks) {
+        PreparedStatement statement = null;
+        int kartId = 0;
+        try {
+            conect.setAutoCommit(true);
+            //   conn.connectionTest();
+            statement = conect.prepareStatement("select K.ID_KARTOTEKA\n" +
+                    "from KARTOTEKA K\n" +
+                    "where upper(K.INDEKS)=upper(?)");
+            statement.setString(1, indeks);
+            ResultSet rs = statement.executeQuery();
+            while (rs.next()) {
+                kartId = rs.getInt(1);
+            }
+            return kartId;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            logger.debug(e.getMessage());
+
+            //Utils.createSimpleDialog("Błąd importu danych", "", "Błąd podczas usuwania kartoteki o indeksie "+cartModel.getIndeks()+", komunikat błędu :\n" + e.getMessage(), Alert.AlertType.ERROR);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.debug(e.getMessage());
+            // Utils.createSimpleDialog("Błąd importu danych", "", "Błąd podczas usuwania kartoteki o indeksie "+cartModel.getIndeks()+", komunikat błędu :\n" + e.getMessage(), Alert.AlertType.ERROR);
+            //  return false;
+
+
+        }
+        return 0;
+    }
+
+    @Override
+    public boolean UpdateSupplierNumber(int idKart, String wartosc) {
+        PreparedStatement statement2 = null;
+        int idCechyPsb = Integer.valueOf(Preferences.getPreferences().getIdCechaPSB());
+        try {
+            conect.setAutoCommit(true);
+            //   conn.connectionTest();
+            statement2 = conect.prepareStatement("update or insert into WYSTCECHKART (ID_KARTOTEKA, ID_CECHADOKK, WARTOSC)\n" +
+                    "values (?, ?, ?)\n" +
+                    "matching (ID_KARTOTEKA, ID_CECHADOKK)");// trim(replace(?, '-', ''))");
+            statement2.setInt(1, idKart);
+            statement2.setInt(2, idCechyPsb);
+            //   JOptionPane.showMessageDialog(null, invoiceModel.getInvoiceDate());
+            statement2.setString(3, wartosc);
+            statement2.executeUpdate();
+            //  conect.close();
+
+
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            logger.debug(e.getMessage());
+            return false;
+            //Utils.createSimpleDialog("Błąd importu danych", "", "Błąd podczas usuwania kartoteki o indeksie "+cartModel.getIndeks()+", komunikat błędu :\n" + e.getMessage(), Alert.AlertType.ERROR);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.debug(e.getMessage());
+            // Utils.createSimpleDialog("Błąd importu danych", "", "Błąd podczas usuwania kartoteki o indeksie "+cartModel.getIndeks()+", komunikat błędu :\n" + e.getMessage(), Alert.AlertType.ERROR);
+            //  return false;
+            return false;
+        } finally {
+            try {
+                statement2.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+                logger.debug(e.getMessage());
+            }
+            return false;
+        }
+
+    }
+
+    @Override
+    public boolean UpdateEan(int idKart, String ean) {
+        CallableStatement statement2 = null;
+        try {
+            conect.setAutoCommit(true);
+            //   conn.connectionTest();
+            statement2 = conect.prepareCall("{call XXX_LC_EDI_ADD_EAN(?,?) }");
+            statement2.setInt(1, idKart);
+            statement2.setString(2, ean);
+            statement2.executeUpdate();
+            //  conect.close();
+
+
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            logger.debug(e.getMessage());
+            return false;
+            //Utils.createSimpleDialog("Błąd importu danych", "", "Błąd podczas usuwania kartoteki o indeksie "+cartModel.getIndeks()+", komunikat błędu :\n" + e.getMessage(), Alert.AlertType.ERROR);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.debug(e.getMessage());
+            // Utils.createSimpleDialog("Błąd importu danych", "", "Błąd podczas usuwania kartoteki o indeksie "+cartModel.getIndeks()+", komunikat błędu :\n" + e.getMessage(), Alert.AlertType.ERROR);
+            //  return false;
+            return false;
+        } finally {
+            try {
+                statement2.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+                logger.debug(e.getMessage());
+            }
+            return false;
+        }
+    }
+
+    @Override
+    public String UnitOfMeasure(int idKart) {
+        PreparedStatement statement = null;
+        String unit = "";
+        try {
+            conect.setAutoCommit(true);
+            //   conn.connectionTest();
+            statement = conect.prepareStatement("select first 1 JM1.JM\n" +
+                    "from KARTOTEKA K\n" +
+                    "join JM JM1 on JM1.ID_JM = K.ID_JM\n" +
+                    "where K.ID_KARTOTEKA=?   ");
+            statement.setInt(1, idKart);
+            ResultSet rs = statement.executeQuery();
+            while (rs.next()) {
+                unit = rs.getString(1);
+            }
+            return unit;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            logger.debug(e.getMessage());
+
+            //Utils.createSimpleDialog("Błąd importu danych", "", "Błąd podczas usuwania kartoteki o indeksie "+cartModel.getIndeks()+", komunikat błędu :\n" + e.getMessage(), Alert.AlertType.ERROR);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.debug(e.getMessage());
+            // Utils.createSimpleDialog("Błąd importu danych", "", "Błąd podczas usuwania kartoteki o indeksie "+cartModel.getIndeks()+", komunikat błędu :\n" + e.getMessage(), Alert.AlertType.ERROR);
+            //  return false;
+
+
+        }
+        return null;
+    }
+
+    @Override
+    public boolean InsertEan(int idKart) {
+        return false;
+    }
+
+    @Override
+    public boolean UpdateNaglUzytkownik(int idNagl, int idUser) {
+        PreparedStatement statement2 = null;
+        try {
+            conect.setAutoCommit(true);
+            //   conn.connectionTest();
+            statement2 = conect.prepareStatement("update nagl n set n.id_uzytkownik=?" +
+                    "where n.id_nagl=?)");// trim(replace(?, '-', ''))");
+            statement2.setInt(1, idUser);
+            statement2.setInt(2, idNagl);
+            statement2.executeUpdate();
+            //  conect.close();
+
+
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            logger.debug(e.getMessage());
+            return false;
+            //Utils.createSimpleDialog("Błąd importu danych", "", "Błąd podczas usuwania kartoteki o indeksie "+cartModel.getIndeks()+", komunikat błędu :\n" + e.getMessage(), Alert.AlertType.ERROR);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.debug(e.getMessage());
+            // Utils.createSimpleDialog("Błąd importu danych", "", "Błąd podczas usuwania kartoteki o indeksie "+cartModel.getIndeks()+", komunikat błędu :\n" + e.getMessage(), Alert.AlertType.ERROR);
+            //  return false;
+            return false;
+        } finally {
+            try {
+                statement2.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+                logger.debug(e.getMessage());
+            }
+            return false;
+        }
+
+    }
+
+    @Override
+    public int GetIdNagl(String nrdok) {
+        PreparedStatement statement = null;
+        int idNagl = 0;
+        try {
+            conect.setAutoCommit(true);
+            //   conn.connectionTest();
+            statement = conect.prepareStatement("select first 1 N.ID_NAGL\n" +
+                    "from NAGL N\n" +
+                    "where upper(N.NRDOKZEW)=upper(?)");
+            statement.setString(1, nrdok);
+            ResultSet rs = statement.executeQuery();
+            while (rs.next()) {
+                idNagl = rs.getInt(1);
+            }
+            return idNagl;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            logger.debug(e.getMessage());
+
+            //Utils.createSimpleDialog("Błąd importu danych", "", "Błąd podczas usuwania kartoteki o indeksie "+cartModel.getIndeks()+", komunikat błędu :\n" + e.getMessage(), Alert.AlertType.ERROR);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.debug(e.getMessage());
+            // Utils.createSimpleDialog("Błąd importu danych", "", "Błąd podczas usuwania kartoteki o indeksie "+cartModel.getIndeks()+", komunikat błędu :\n" + e.getMessage(), Alert.AlertType.ERROR);
+            //  return false;
+
+
+        }
+        return 0;
+    }
+
+
+    @Override
+    public String NewKart(CartModel cartModel, int punkt) {
+        CallableStatement statement = null;
+        String ean = "";
+        ResultSet rs = null;
+        try {
+            conect.setAutoCommit(true);
+            conect.setTransactionIsolation(1);
+
+            statement = conect.prepareCall("{call XXX_LC_IMPORT_KARTOTEK4(?, ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)}");
+            statement.registerOutParameter(19, Types.INTEGER);
+            statement.registerOutParameter(20, Types.INTEGER);
+
+            if ((cartModel.getIndeks() == null) || (cartModel.getIndeks().isEmpty())) {
+                statement.setNull(1, Types.VARCHAR);
+
+            } else {
+                statement.setString(1, cartModel.getIndeks());
+
+            }
+
+            if ((cartModel.getIdentyfikator() != null) && (!cartModel.getIdentyfikator().isEmpty())) {
+                statement.setString(2, cartModel.getIdentyfikator());
+
+
+            }
+            if ((cartModel.getIdentyfikator() == null) || (cartModel.getIdentyfikator().isEmpty())) {
+                statement.setNull(2, Types.VARCHAR);
+
+            }
+            if ((cartModel.getNazwaInternetowa() != null) && (!cartModel.getNazwaInternetowa().isEmpty())) {
+
+                statement.setString(3, cartModel.getNazwaInternetowa());
+            }
+            if ((cartModel.getNazwaInternetowa() == null) || (cartModel.getNazwaInternetowa().isEmpty())) {
+
+                statement.setNull(3, Types.VARCHAR);
+
+            }
+            if ((cartModel.getNazwaSystemowa() != null) && (!cartModel.getNazwaSystemowa().isEmpty())) {
+
+                statement.setString(4, cartModel.getNazwaSystemowa());
+            }
+            if ((cartModel.getNazwaSystemowa() == null) || (cartModel.getNazwaSystemowa().isEmpty())) {
+
+                statement.setNull(4, Types.VARCHAR);
+
+            }
+            if ((cartModel.getJednostka() != null) && (!cartModel.getJednostka().isEmpty())) {
+
+                statement.setString(5, cartModel.getJednostka());
+            }
+            if ((cartModel.getJednostka() == null) || (cartModel.getJednostka().isEmpty())) {
+                statement.setNull(5, Types.VARCHAR);
+
+            }
+            //   JOptionPane.showMessageDialog(null,cartModel.getJednostka());
+            if ((cartModel.getKodEanDomyslny() != null) && (!cartModel.getKodEanDomyslny().isEmpty())) {
+                statement.setString(6, cartModel.getKodEanDomyslny());
+                ean = cartModel.getKodEanDomyslny();
+            }
+            if ((cartModel.getKodEanDomyslny() == null) || (cartModel.getKodEanDomyslny().isEmpty())) {
+                statement.setNull(6, Types.VARCHAR);
+
+            }
+            //  JOptionPane.showMessageDialog(null,cartModel.getJednostka());
+            if ((cartModel.getIdDodatkowegoOpakowanieZbiorczegoEAN() == null) || (cartModel.getIdDodatkowegoOpakowanieZbiorczegoEAN().isEmpty())) {
+                statement.setNull(7, Types.VARCHAR);
+
+            } else {
+                statement.setString(7, cartModel.getIdDodatkowegoOpakowanieZbiorczegoEAN());
+
+            }
+            if ((cartModel.getDodatkowyEan() == null) || (cartModel.getDodatkowyEan().isEmpty())) {
+                statement.setNull(8, Types.VARCHAR);
+
+            } else {
+                statement.setString(8, cartModel.getDodatkowyEan());
+            }
+//            if (cartModel.getCenaHurtowa() == null) {
+//                //  BigDecimal b1 = new BigDecimal("0.0000");
+//                statement.setDouble(9, 0.0000);
+//            } else {
+//
+////                BigDecimal b1 = new BigDecimal(cartModel.getCenaHurtowa());
+//
+//                statement.setDouble(9, Double.parseDouble(cartModel.getCenaHurtowa().replace(",", ".")));
+//            }
+//
+//            if (cartModel.getCenaSklepInternetowy() == null) {
+//
+//                statement.setDouble(10, 0.0000);
+//            } else {
+//                statement.setDouble(10, (Double.parseDouble(cartModel.getCenaSklepInternetowy().replace(",", "."))));
+//            }
+//            if (cartModel.getCenaDlaParagonu() == null) {
+//
+//                statement.setDouble(11, 0.0000);
+//            } else {
+//                statement.setDouble(11, Double.parseDouble(cartModel.getCenaDlaParagonu().replace(",", ".")));
+//            }
+            if ((cartModel.getOstatniaCena() == null) || (cartModel.getOstatniaCena().isEmpty())) {
+
+                statement.setNull(9, Types.VARCHAR);
+            }
+            if ((cartModel.getOstatniaCena() != null) && (!cartModel.getOstatniaCena().isEmpty())) {// && (cartModel.getGrupaBonusowa().isEmpty()) || (cartModel.getGrupaRabatowa().isEmpty()) || (cartModel.getGrupaBonusowa() == null) || (cartModel.getGrupaRabatowa() == null)) {
+                statement.setString(9, cartModel.getOstatniaCena());
+            } else {
+                statement.setNull(9, Types.VARCHAR);
+            }
+            if ((cartModel.getUwagi() == null) || (cartModel.getUwagi().isEmpty())) {
+                statement.setString(10, null);
+                statement.setInt(15, 0);
+            } else {
+                statement.setString(10, cartModel.getUwagi());
+                statement.setInt(15, 1);
+            }
+            if ((cartModel.getOstrzezenie() == null) || (cartModel.getOstrzezenie().isEmpty())) {
+                statement.setString(11, null);
+                statement.setInt(16, 0);
+            } else {
+                statement.setString(11, cartModel.getOstrzezenie());
+                statement.setInt(16, 1);
+            }
+//            if (cartModel.getKgo() == null) {
+//                statement.setDouble(15, 0);
+//            } else {
+//                statement.setDouble(15, Double.valueOf(cartModel.getKgo()));
+//            }
+//            if (cartModel.getWaga() == null) {
+//                statement.setString(16, null);
+//            } else {
+//                statement.setString(16, cartModel.getWaga());
+//            }
+            if ((cartModel.getIdPriorytet() == null) || (cartModel.getIdPriorytet().isEmpty())) {
+                statement.setString(12, "0");
+            } else {
+                statement.setString(12, cartModel.getIdPriorytet());
+            }
+//            if (cartModel.getJestUwaga() == null) {
+//                statement.setInt(18, 0);
+//            } else {
+//                statement.setInt(18, 1);
+//            }
+//            if (cartModel.getJestOstrzezenie() == null) {
+//                statement.setInt(19, 0);
+//            } else {
+//                statement.setInt(19, 1);
+//            }
+//            if (cartModel.getIdOpakowaniaZbiorczego1() == null) {
+//                statement.setNull(20, Types.INTEGER);
+//            } else {
+//                statement.setInt(20, Integer.valueOf(cartModel.getIdOpakowaniaZbiorczego1()));
+//            }
+//            if (cartModel.getOpakowanieZbiorcze1() == null) {
+//                statement.setNull(21, Types.NUMERIC);
+//            } else {
+//                statement.setDouble(21, Double.valueOf(cartModel.getOpakowanieZbiorcze1()));
+//            }
+//            if (cartModel.getIdOpakowaniaZbiorczego2() == null) {
+//                statement.setNull(22, Types.INTEGER);
+//            } else {
+//                statement.setInt(22, Integer.valueOf(cartModel.getIdOpakowaniaZbiorczego2()));
+//            }
+//            if (cartModel.getOpakowanieZbiorcze2() == null) {
+//                statement.setNull(23, Types.NUMERIC);
+//            } else {
+//                statement.setDouble(23, Double.valueOf(cartModel.getOpakowanieZbiorcze2()));
+//            }
+//            if (cartModel.getIdOpakowaniaZbiorczego3() == null) {
+//                statement.setNull(23, Types.INTEGER);
+//            } else {
+//                statement.setInt(23, Integer.valueOf(cartModel.getIdOpakowaniaZbiorczego3()));
+//            }
+//            if (cartModel.getOpakowanieZbiorcze3() == null) {
+//                statement.setNull(25, Types.NUMERIC);
+//            } else {
+//                statement.setDouble(25, Double.valueOf(cartModel.getOpakowanieZbiorcze3()));
+//            }
+//            if (cartModel.getIdTypOpisu() == null) {
+//                statement.setNull(26, Types.INTEGER);
+//            } else {
+//                statement.setInt(26, Integer.valueOf(cartModel.getIdTypOpisu()));
+//            }
+//            if (cartModel.getOpis() == null) {
+//                statement.setString(27, cartModel.getOpis());
+//            } else {
+//                statement.setNull(27, Types.VARCHAR);
+//            }
+            if ((cartModel.getStronaWWW() == null) || (cartModel.getStronaWWW().isEmpty())) {
+                statement.setNull(13, Types.VARCHAR);
+            } else {
+                statement.setString(13, cartModel.getStronaWWW());
+            }
+
+//           if (cartModel.getIdRodzajuGrupyKartotekowejProducent() == null) {
+//                statement.setInt(14, 2);
+//            } else{
+//                statement.setInt(14, Integer.valueOf(cartModel.getIdRodzajuGrupyKartotekowejProducent()));
+//            }
+
+            if ((cartModel.getKodProducent() == null) || (cartModel.getKodProducent().isEmpty())) {
+                statement.setNull(14, Types.VARCHAR);
+                //      JOptionPane.showMessageDialog(null,cartModel.getIndeks());
+            } else {
+                statement.setString(14, cartModel.getKodProducent());
+            }
+
+//            if (cartModel.getIdRodzajuGrupyKartotekowej1() == null) {
+//                statement.setNull(31, Types.INTEGER);
+//            } else {
+//                statement.setInt(31, (Integer.valueOf(cartModel.getIdRodzajuGrupyKartotekowej1())));
+//            }
+//            if (cartModel.getGrupaKartotekowa1() == null) {
+//                statement.setNull(32, Types.VARCHAR);
+//            } else {
+//                statement.setString(32, (cartModel.getGrupaKartotekowa1()));
+//            }
+//            if (cartModel.getIdRodzajuGrupyKartotekowej2() == null) {
+//                statement.setNull(33, Types.INTEGER);
+//            } else {
+//                statement.setInt(33, (Integer.valueOf(cartModel.getIdRodzajuGrupyKartotekowej2())));
+//            }
+//            if (cartModel.getGrupaKartotekowa2() == null) {
+//                statement.setNull(34, Types.VARCHAR);
+//            } else {
+//                statement.setString(34, (cartModel.getGrupaKartotekowa2()));
+//            }
+//            if (cartModel.getIdRodzajuGrupyKartotekowej3() == null) {
+//                statement.setNull(35, Types.INTEGER);
+//            } else {
+//                statement.setInt(35, (Integer.valueOf(cartModel.getIdRodzajuGrupyKartotekowej3())));
+//            }
+//            if (cartModel.getGrupaKartotekowa3() == null) {
+//                statement.setNull(36, Types.VARCHAR);
+//            } else {
+//                statement.setString(36, (cartModel.getGrupaKartotekowa3()));
+//            }
+//            if (cartModel.getIdRodzajuGrupyKartotekowej4() == null) {
+//                statement.setNull(37, Types.INTEGER);
+//            } else {
+//                statement.setInt(37, (Integer.valueOf(cartModel.getIdRodzajuGrupyKartotekowej4())));
+//            }
+//            if (cartModel.getGrupaKartotekowa4() == null) {
+//                statement.setNull(38, Types.VARCHAR);
+//            } else {
+//                statement.setString(38, (cartModel.getGrupaKartotekowa4()));
+//            }
+//            if (cartModel.getIdRodzajuGrupyKartotekowej5() == null) {
+//                statement.setNull(39, Types.INTEGER);
+//            } else {
+//                statement.setInt(39, (Integer.valueOf(cartModel.getIdRodzajuGrupyKartotekowej5())));
+//            }
+//            if (cartModel.getGrupaKartotekowa5() == null) {
+//                statement.setNull(40, Types.VARCHAR);
+//            } else {
+//                statement.setString(40, (cartModel.getGrupaKartotekowa5()));
+//            }
+            if ((cartModel.getIdStawkiVat() == null) || (cartModel.getIdStawkiVat().isEmpty())) {
+                statement.setString(17, "1");
+            } else {
+                statement.setString(17, cartModel.getIdStawkiVat());
+            }
+
+            statement.setInt(18, punkt);
+            statement.execute();
+            //
+            // JOptionPane.showMessageDialog(null, cartModel.getIndeks());
+
+
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            logger.debug(ex.getMessage() + " - dotyczy kartoteki :" + cartModel.getIndeks());
+
+        }
+
+        id_kartoteka = 0;
+        try {
+            id_kartoteka = statement.getInt(19);
+            new_kart = statement.getInt(20);
+            //   JOptionPane.showMessageDialog(null,id_kartoteka+" ,"+"nowa :"+new_kart);
+
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            //logger.debug(ex.getMessage());
+            id_kartoteka = 0;
+
+        }
+
+        // statement.close();
+        if (id_kartoteka != 0) {
+//JOptionPane.showMessageDialog(null,id_kartoteka);
+            ean = cartModel.getKodEanDomyslny();
+
+//            PreparedStatement statement2 = null;
+//            String unit = "";
+//            try {
+//                conect.setAutoCommit(true);
+//                //   conn.connectionTest();
+//                statement2 = conect.prepareStatement("select first 1 JM1.JM\n" +
+//                        "from KARTOTEKA K\n" +
+//                        "join JM JM1 on JM1.ID_JM = K.ID_JM\n" +
+//                        "where K.ID_KARTOTEKA=?   ");
+//         //       statement.setInt(1, idKart);
+//              //  ResultSet rs = statement.executeQuery();
+//           //     while (rs.next()) {
+//            //        unit = rs.getString(1);
+//            //    }
+//                return unit;
+//            } catch (SQLException e) {
+//                e.printStackTrace();
+//                logger.debug(e.getMessage());
+//
+//                //Utils.createSimpleDialog("Błąd importu danych", "", "Błąd podczas usuwania kartoteki o indeksie "+cartModel.getIndeks()+", komunikat błędu :\n" + e.getMessage(), Alert.AlertType.ERROR);
+//
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//                logger.debug(e.getMessage());
+//                // Utils.createSimpleDialog("Błąd importu danych", "", "Błąd podczas usuwania kartoteki o indeksie "+cartModel.getIndeks()+", komunikat błędu :\n" + e.getMessage(), Alert.AlertType.ERROR);
+//                //  return false;
+//
+//
+//            }
+//            return null;
+
+
+//
+//
+//        {
+//            addNewCart = true;
+//            try {
+//
+//                try {
+//                    statement = conect.prepareCall("{call XXX_LC_IMPORT_CENY4(?,?, ?,?,?,?)}");
+//                    statement.setInt(1, id_kartoteka);
+//                    statement.setString(2, cartModel.getCenaHurtowa());
+//                    statement.setString(3, cartModel.getCenaSklepInternetowy());
+//                    statement.setString(4, cartModel.getCenaDlaParagonu());
+//                    statement.setInt(5, punkt);
+//                    statement.setInt(6, new_kart);
+//                    statement.execute();
+//                } catch (SQLException ex) {
+//                    ex.printStackTrace();
+//
+//                    logger.debug(ex.getMessage());
+//                }
+//                // statement.close();
+//                // return true;
+//
+//                //waga
+//                if ((cartModel.getNazwaZdjecia() != null)) {// && (!cartModel.getNazwaZdjecia().isEmpty()) && (!cartModel.getNazwaZdjecia().equals(""))) {
+//                    String nazwa_zdjecia = cartModel.getNazwaZdjecia();
+//                    //      JOptionPane.showMessageDialog(null, nazwa_zdjecia);
+//                    if (nazwa_zdjecia.contains(";")) {
+//                        String[] zdjecia = nazwa_zdjecia.split(";");
+//                        for (String zdjecie : zdjecia) {
+//                            try {
+//
+//                                statement = conect.prepareCall("{call XXX_LC_IMPORT_ZDJECIA4(?,?,?,?)}");
+//                                statement.setInt(1, id_kartoteka);
+//                                statement.setString(2, zdjecie);
+//                                statement.setInt(3, punkt);
+//                                statement.setInt(4, new_kart);
+//                                statement.execute();
+//                            } catch (SQLException ex) {
+//                                ex.printStackTrace();
+//                                logger.debug(ex.getMessage());
+//
+//                            }
+//
+//                        }
+//                    } else {
+//                        try {
+//                            statement = conect.prepareCall("{call XXX_LC_IMPORT_ZDJECIA4(?,?,?,?)}");
+//                            statement.setInt(1, id_kartoteka);
+//                            statement.setString(2, nazwa_zdjecia);
+//                            statement.setInt(3, punkt);
+//                            statement.setInt(4, new_kart);
+//                            statement.execute();
+//                        } catch (SQLException ex) {
+//                            ex.printStackTrace();
+//                            logger.debug(ex.getMessage());
+//
+//                        }
+//                    }
+//                }
+//
+//                if ((cartModel.getKgo() != null) && (!cartModel.getKgo().isEmpty()) && (!cartModel.getKgo().equals(""))) {
+//                    try {
+//                        statement = conect.prepareCall("{call XXX_LC_IMPORT_KGO4(?, ?,?,?)}");
+//                        statement.setInt(1, id_kartoteka);
+//                        statement.setString(2, cartModel.getKgo());
+//                        statement.setInt(3, punkt);
+//                        statement.setInt(4, new_kart);
+//                        statement.execute();
+//                    } catch (SQLException ex) {
+//                        ex.printStackTrace();
+//                        logger.debug(ex.getMessage());
+//                    }
+//                }
+//
+//
+//                if ((cartModel.getWaga() != null) && (!cartModel.getWaga().isEmpty()) && (!cartModel.getWaga().equals(""))) {
+//                    try {
+//                        statement = conect.prepareCall("{call XXX_LC_IMPORT_WAGA4(?,?,?,?)}");
+//                        statement.setInt(1, id_kartoteka);
+//                        statement.setString(2, cartModel.getWaga());
+//                        statement.setInt(3, punkt);
+//                        statement.setInt(4, new_kart);
+//                        statement.execute();
+//                    } catch (SQLException ex) {
+//                        ex.printStackTrace();
+//                        logger.debug(ex.getMessage());
+//                    }
+//                }
+//                // statement.close();
+//
+//                if ((cartModel.getKartotekiPowiazane() != null) && (!cartModel.getKartotekiPowiazane().isEmpty()) && (!cartModel.getKartotekiPowiazane().equals(""))) {
+//
+//                    String kartoteki = String.valueOf(cartModel.getKartotekiPowiazane().toString());
+//
+//                    if (kartoteki.contains(";")) {
+//                        String[] kart_pow = kartoteki.split(";", -1);//" ;//kartoteki.split(";");
+//                        for (String kartoteka : kart_pow) {
+//
+//                            //  JOptionPane.showMessageDialog(null,kart);
+//                            try {
+//                                statement = conect.prepareCall("{call XXX_LC_IMPORT_KARTPOW4(?,?,?,?)}");
+//                                statement.setInt(1, id_kartoteka);
+//                                statement.setString(2, kartoteka);
+//                                statement.setInt(3, punkt);
+//                                statement.setInt(4, new_kart);
+//                                statement.execute();
+//                            } catch (SQLException ex) {
+//                                ex.printStackTrace();
+//                                logger.debug(ex.getMessage());
+//                            }
+//
+//                        }
+//
+//                    } else {
+//                        try {
+//                            statement = conect.prepareCall("{call XXX_LC_IMPORT_KARTPOW4(?,?,?,?)}");
+//                            statement.setInt(1, id_kartoteka);
+//                            statement.setString(2, kartoteki);
+//                            statement.setInt(3, punkt);
+//                            statement.setInt(4, new_kart);
+//                            statement.execute();
+//                        } catch (SQLException ex) {
+//
+//                            ex.printStackTrace();
+//                            logger.debug(ex.getMessage());
+//
+//                        }
+//                    }
+//                }
+//                if ((cartModel.getZamienniki() != null) && (!cartModel.getZamienniki().isEmpty()) && (!cartModel.getZamienniki().equals(""))) {
+//                    String zamieniki = cartModel.getZamienniki();
+//                    if (zamieniki.contains(";")) {
+//                        String[] kart_zam = zamieniki.split(";", -1);
+//                        for (String zamiennik : kart_zam) {
+//
+//                            try {
+//                                statement = conect.prepareCall("{call XXX_LC_IMPORT_KARZAM4(?,?,?,?)}");
+//                                statement.setInt(1, id_kartoteka);
+//                                statement.setString(2, zamiennik);
+//                                statement.setInt(3, punkt);
+//                                statement.setInt(4, new_kart);
+//                                statement.execute();
+//                            } catch (SQLException ex) {
+//                                ex.printStackTrace();
+//                                logger.debug(ex.getMessage());
+//                            }
+//
+//                        }
+//
+//                    } else {
+//
+//                        try {
+//                            statement = conect.prepareCall("{call XXX_LC_IMPORT_KARZAM4(?,?,?,?)}");
+//                            statement.setInt(1, id_kartoteka);
+//                            statement.setString(2, zamieniki);
+//                            statement.setInt(3, punkt);
+//                            statement.setInt(4, new_kart);
+//                            statement.execute();
+//                        } catch (SQLException ex) {
+//
+//                            ex.printStackTrace();
+//                            logger.debug(ex.getMessage());
+//                        }
+//                    }
+//                }
+//                //opakowanie zbiorcze 1
+//                if ((cartModel.getIdOpakowaniaZbiorczego1() != null) && (!cartModel.getIdOpakowaniaZbiorczego1().isEmpty()) && (cartModel.getIloscOpakowanieZbiorcze1() != null) && (!cartModel.getIloscOpakowanieZbiorcze1().isEmpty())) {
+//                    try {
+//                        statement = conect.prepareCall("{call XXX_LC_IMPORT_OPAKZ4(?,?,?,?,?)}");
+//                        statement.setInt(1, id_kartoteka);
+//                        statement.setString(2, cartModel.getIdOpakowaniaZbiorczego1());
+//                        statement.setString(3, cartModel.getIloscOpakowanieZbiorcze1());
+//                        statement.setInt(4, punkt);
+//                        statement.setInt(5, new_kart);
+//                        statement.execute();
+//                    } catch (SQLException ex) {
+//                        ex.printStackTrace();
+//                        logger.debug(ex.getMessage());
+//                    }
+//
+//
+//                }
+//                if ((cartModel.getIdOpakowaniaZbiorczego2() != null) && (!cartModel.getIdOpakowaniaZbiorczego2().isEmpty()) && (cartModel.getIloscOpakowanieZbiorcze2() != null) && (!cartModel.getIloscOpakowanieZbiorcze2().isEmpty())) {
+//                    try {
+//                        statement = conect.prepareCall("{call XXX_LC_IMPORT_OPAKZ4(?,?,?,?,?)}");
+//                        statement.setInt(1, id_kartoteka);
+//                        statement.setString(2, cartModel.getIdOpakowaniaZbiorczego2());
+//                        statement.setString(3, cartModel.getIloscOpakowanieZbiorcze2());
+//                        statement.setInt(4, punkt);
+//                        statement.setInt(5, new_kart);
+//                        statement.execute();
+//                    } catch (SQLException ex) {
+//                        ex.printStackTrace();
+//                        logger.debug(ex.getMessage());
+//                    }
+//
+//
+//                }
+//                if ((cartModel.getIdOpakowaniaZbiorczego3() != null) && (!cartModel.getIdOpakowaniaZbiorczego3().isEmpty()) && (cartModel.getIloscOpakowanieZbiorcze3() != null) && (!cartModel.getIloscOpakowanieZbiorcze3().isEmpty())) {
+//                    try {
+//                        statement = conect.prepareCall("{call XXX_LC_IMPORT_OPAKZ4(?,?,?,?,?)}");
+//                        statement.setInt(1, id_kartoteka);
+//                        statement.setString(2, cartModel.getIdOpakowaniaZbiorczego3());
+//                        statement.setString(3, cartModel.getIloscOpakowanieZbiorcze3());
+//                        statement.setInt(4, punkt);
+//                        statement.setInt(5, new_kart);
+//                        statement.execute();
+//                        //  JOptionPane.showMessageDialog(null, "opakowania zbiorcze");
+//                    } catch (SQLException ex) {
+//                        ex.printStackTrace();
+//                        logger.debug(ex.getMessage());
+//                    }
+//
+//
+//                }
+//                ////opakowanie zbiorcze ean
+//
+//
+//                if ((cartModel.getIdRodzajuGrupyKartotekowej1() != null) && (!cartModel.getIdRodzajuGrupyKartotekowej1().isEmpty()) && (cartModel.getKodGrupaKartotekowa1() != null) && (!cartModel.getKodGrupaKartotekowa1().isEmpty()) && (!cartModel.getKodGrupaKartotekowa1().equals("")) && (!cartModel.getIdRodzajuGrupyKartotekowej1().equals(""))) {
+//                    try {
+//                        statement = conect.prepareCall("{call XXX_LC_IMPORT_GRUPAKART4(?,?,?,?,?)}");
+//                        statement.setInt(1, id_kartoteka);
+//                        statement.setString(2, cartModel.getIdRodzajuGrupyKartotekowej1());
+//                        statement.setString(3, cartModel.getKodGrupaKartotekowa1());
+//                        statement.setInt(4, punkt);
+//                        statement.setInt(5, new_kart);
+//                        statement.execute();
+//                    } catch (SQLException ex) {
+//                        ex.printStackTrace();
+//                        logger.debug(ex.getMessage());
+//                    }
+//
+//                }
+//                if ((cartModel.getIdRodzajuGrupyKartotekowej2() != null) && (!cartModel.getIdRodzajuGrupyKartotekowej2().isEmpty()) && (cartModel.getKodGrupaKartotekowa2() != null) && (!cartModel.getKodGrupaKartotekowa2().isEmpty()) && (!cartModel.getKodGrupaKartotekowa2().equals("")) && (!cartModel.getIdRodzajuGrupyKartotekowej2().equals(""))) {
+//                    try {
+//                        statement = conect.prepareCall("{call XXX_LC_IMPORT_GRUPAKART4(?,?,?,?,?)}");
+//                        statement.setInt(1, id_kartoteka);
+//                        statement.setString(2, cartModel.getIdRodzajuGrupyKartotekowej2());
+//                        statement.setString(3, cartModel.getKodGrupaKartotekowa2());
+//                        statement.setInt(4, punkt);
+//                        statement.setInt(5, new_kart);
+//                        statement.execute();
+//                    } catch (SQLException ex) {
+//                        ex.printStackTrace();
+//                        logger.debug(ex.getMessage());
+//                    }
+//
+//
+//                }
+//                if ((cartModel.getIdRodzajuGrupyKartotekowej3() != null) && (!cartModel.getIdRodzajuGrupyKartotekowej3().isEmpty()) && (cartModel.getKodGrupaKartotekowa3() != null) && (!cartModel.getKodGrupaKartotekowa3().isEmpty()) && (!cartModel.getKodGrupaKartotekowa3().equals("")) && (!cartModel.getIdRodzajuGrupyKartotekowej3().equals(""))) {
+//                    try {
+//                        statement = conect.prepareCall("{call XXX_LC_IMPORT_GRUPAKART4(?,?,?,?,?)}");
+//                        statement.setInt(1, id_kartoteka);
+//                        statement.setString(2, cartModel.getIdRodzajuGrupyKartotekowej3());
+//                        statement.setString(3, cartModel.getKodGrupaKartotekowa3());
+//                        statement.setInt(4, punkt);
+//                        statement.setInt(5, new_kart);
+//                        statement.execute();
+//                    } catch (SQLException ex) {
+//                        ex.printStackTrace();
+//                        logger.debug(ex.getMessage());
+//                    }
+//
+//
+//                }
+//                if ((cartModel.getIdRodzajuGrupyKartotekowej4() != null) && (!cartModel.getIdRodzajuGrupyKartotekowej4().isEmpty()) && (cartModel.getKodGrupaKartotekowa4() != null) && (!cartModel.getKodGrupaKartotekowa4().isEmpty()) && (!cartModel.getKodGrupaKartotekowa4().equals("")) && (!cartModel.getIdRodzajuGrupyKartotekowej4().equals(""))) {
+//                    try {
+//                        statement = conect.prepareCall("{call XXX_LC_IMPORT_GRUPAKART4(?,?,?,?,?)}");
+//                        statement.setInt(1, id_kartoteka);
+//                        statement.setString(2, cartModel.getIdRodzajuGrupyKartotekowej4());
+//                        statement.setString(3, cartModel.getKodGrupaKartotekowa4());
+//                        statement.setInt(4, punkt);
+//                        statement.setInt(5, new_kart);
+//                        statement.execute();
+//                    } catch (SQLException ex) {
+//                        ex.printStackTrace();
+//                        logger.debug(ex.getMessage());
+//                    }
+//
+//
+//                }
+//                if ((cartModel.getIdRodzajuGrupyKartotekowej5() != null) && (!cartModel.getIdRodzajuGrupyKartotekowej5().isEmpty()) && (cartModel.getKodGrupaKartotekowa5() != null) && (!cartModel.getKodGrupaKartotekowa5().isEmpty()) && (!cartModel.getKodGrupaKartotekowa5().equals("")) && (!cartModel.getIdRodzajuGrupyKartotekowej5().equals(""))) {
+//                    try {
+//                        statement = conect.prepareCall("{call XXX_LC_IMPORT_GRUPAKART4(?,?,?,?,?)}");
+//                        statement.setInt(1, id_kartoteka);
+//                        statement.setString(2, cartModel.getIdRodzajuGrupyKartotekowej5());
+//                        statement.setString(3, cartModel.getKodGrupaKartotekowa5());
+//                        statement.setInt(4, punkt);
+//                        statement.setInt(5, new_kart);
+//                        statement.execute();
+//                    } catch (SQLException ex) {
+//                        ex.printStackTrace();
+//                        logger.debug(ex.getMessage());
+//                    }
+//
+//
+//                }
+//                if ((cartModel.getOpis() != null) && (!cartModel.getOpis().isEmpty()) && (cartModel.getOpis() != null) && (!cartModel.getOpis().isEmpty()) && (!cartModel.getOpis().equals("")) && (!cartModel.getOpis().equals(""))) {
+//                    try {
+//                        statement = conect.prepareCall("{call XXX_LC_IMPORT_OPIS4(?,?,?,?,?)}");
+//                        statement.setInt(1, id_kartoteka);
+//                        statement.setString(2, cartModel.getIdTypOpisu());
+//                        statement.setString(3, cartModel.getOpis());
+//                        statement.setInt(4, punkt);
+//                        statement.setInt(5, new_kart);
+//                        statement.execute();
+//                    } catch (SQLException ex) {
+//                        ex.printStackTrace();
+//                        logger.debug(ex.getMessage());
+//                    }
+//
+//
+//                }
+//                if ((cartModel.getDokumentacja() != null) && (!cartModel.getDokumentacja().isEmpty()) && (!cartModel.getDokumentacja().equals(""))) {
+//
+//                    String dokumentacja = String.valueOf(cartModel.getDokumentacja().toString());
+//
+//                    if (dokumentacja.contains(";")) {
+//                        String[] dok = dokumentacja.split(";", -1);//" ;//kartoteki.split(";");
+//                        for (String kartoteka : dok) {
+//
+//                            //  JOptionPane.showMessageDialog(null,kart);
+//                            try {
+//                                statement = conect.prepareCall("{call XXX_LC_IMPORT_DOKUMENTACJA4(?,?,?,?,?)}");
+//                                statement.setInt(1, id_kartoteka);
+//                                statement.setString(2, kartoteka);
+//                                statement.setString(3, Settings.getDocPath());
+//                                statement.setInt(4, punkt);
+//                                statement.setInt(5, new_kart);
+//                                statement.execute();
+//                            } catch (SQLException ex) {
+//                                ex.printStackTrace();
+//                                logger.debug(ex.getMessage());
+//                            }
+//
+//                        }
+//
+//                    } else {
+//                        try {
+//                            statement = conect.prepareCall("{call XXX_LC_IMPORT_DOKUMENTACJA4(?,?,?,?,?)}");
+//                            statement.setInt(1, id_kartoteka);
+//                            statement.setString(2, dokumentacja);
+//                            statement.setString(3, Settings.getDocPath());
+//                            statement.setInt(4, punkt);
+//                            statement.setInt(5, new_kart);
+//                            statement.execute();
+//                        } catch (SQLException ex) {
+//
+//                            ex.printStackTrace();
+//                            logger.debug(ex.getMessage());
+//
+//                        }
+//                    }
+//                }
+//
+//
+//                return ean;
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//                logger.debug(e.getMessage());
+//                // MainController.addLog("Poprawnie zaimportowano kartotekę o indeksie : " + cartModel.getIndeks());
+//
+//                // Utils.createSimpleDialog("Błąd importu danych", "", "Błąd podczas importu, komunikat błędu :\n" + e.getMessage(), Alert.AlertType.ERROR);
+//                ;
+//            } finally {
+//                try {
+//                    statement.close();
+//                } catch (SQLException e) {
+//                    e.printStackTrace();
+//                    logger.debug(e.getMessage());
+//                }
+//            }
+
+
+            //if(kartotek==0)      }
+
+
+        }
+
+
+        return ean;
+    }
+
+    @Override
+    public String GetEanByIdKart(int idKart) {
+        return null;
+    }
+
+    @Override
+    public boolean UpdateDoc(String doc, int user) {
+        try {
+            conect.setAutoCommit(true);
+            CallableStatement statement = conect.prepareCall("{call XXX_LC_EDI_UPDATE_USER(?,?)}");
+            statement.setString(1, doc);
+            statement.setInt(2, user);
+            statement.executeUpdate();
+            return true;
+
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            logger.debug(ex.getMessage());
+            //   JOptionPane.showMessageDialog(null, "Kartot eka o numerze " + id_kartoteka + " posiada nieuzupełnione wszystkie wymagane pola !", "Bład", JOptionPane.ERROR_MESSAGE);
+        } catch (NullPointerException ex) {
+            logger.debug(ex.getMessage());
+            ex.printStackTrace();
+        } catch (Exception ex) {
+            logger.debug(ex.getMessage());
+            ex.printStackTrace();
+        }
+
+        return false;
+    }
+
+    @Override
+    public boolean UpdateUrzzew(String kod_urzzew, String magazyn) {
+        try {
+            conect.setAutoCommit(true);
+            CallableStatement statement = conect.prepareCall("{call XXX_LC_EDI_UPDATE_URZZEW(?,?)}");
+            statement.setString(1, kod_urzzew);
+            statement.setString(2, magazyn);
+            statement.execute();
+            return true;
+
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            logger.debug(ex.getMessage());
+            //   JOptionPane.showMessageDialog(null, "Kartot eka o numerze " + id_kartoteka + " posiada nieuzupełnione wszystkie wymagane pola !", "Bład", JOptionPane.ERROR_MESSAGE);
+        } catch (NullPointerException ex) {
+            logger.debug(ex.getMessage());
+            ex.printStackTrace();
+        } catch (Exception ex) {
+            logger.debug(ex.getMessage());
+            ex.printStackTrace();
+        }
+
+        return false;
+    }
+
+    @Override
+    public int GetIdMagazyn(String name) {
+        CallableStatement statement2 = null;
+        int id_magazyn = 0;
+        String mag = name.trim();
+
+        try {
+            conect.setAutoCommit(true);
+            //   conn.connectionTest();
+            statement2 = conect.prepareCall("{call XXX_LC_EDI_GETIDMAG(?,?)}");
+            statement2.registerOutParameter(2, Types.INTEGER);
+            statement2.setString(1, name);
+            statement2.execute();
+            id_magazyn = statement2.getInt(2);
+
+            return id_magazyn;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            logger.debug(e.getMessage());
+
+            //Utils.createSimpleDialog("Błąd importu danych", "", "Błąd podczas usuwania kartoteki o indeksie "+cartModel.getIndeks()+", komunikat błędu :\n" + e.getMessage(), Alert.AlertType.ERROR);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.debug(e.getMessage());
+            // Utils.createSimpleDialog("Błąd importu danych", "", "Błąd podczas usuwania kartoteki o indeksie "+cartModel.getIndeks()+", komunikat błędu :\n" + e.getMessage(), Alert.AlertType.ERROR);
+            //  return false;
+
+
+        }
+        return 0;
+    }
+
+
 }
 
 

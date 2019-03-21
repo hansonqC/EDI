@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */ 
-package org.pdfsam.ui;
+package pl.hansonq.utils.progress_indicators;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -37,7 +37,7 @@ import com.sun.javafx.css.converters.SizeConverter;
  */
 public class RingProgressIndicator extends ProgressCircleIndicator {
     public RingProgressIndicator() {
-        this.getStylesheets().add(RingProgressIndicator.class.getResource("ringprogress.css").toExternalForm());
+        this.getStylesheets().add(getClass().getClassLoader().getResource("ringprogress.css").toExternalForm());///(RingProgressIndicator.class.getResource("ringprogress.css").toExternalForm());
         this.getStyleClass().add("ringindicator");
     }
 

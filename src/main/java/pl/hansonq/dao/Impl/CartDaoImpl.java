@@ -699,7 +699,7 @@ public class CartDaoImpl implements CartDao {
                 // MainController.addLog("Poprawnie zaimportowano kartotekę o indeksie : " + cartModel.getIndeks());
 
                 // Utils.createSimpleDialog("Błąd importu danych", "", "Błąd podczas importu, komunikat błędu :\n" + e.getMessage(), Alert.AlertType.ERROR);
-                ;
+
             } finally {
                 try {
                     statement.close();
@@ -1300,7 +1300,7 @@ public class CartDaoImpl implements CartDao {
                 // MainController.addLog("Poprawnie zaimportowano kartotekę o indeksie : " + cartModel.getIndeks());
 
                 // Utils.createSimpleDialog("Błąd importu danych", "", "Błąd podczas importu, komunikat błędu :\n" + e.getMessage(), Alert.AlertType.ERROR);
-                ;
+
             } finally {
                 try {
                     statement.close();

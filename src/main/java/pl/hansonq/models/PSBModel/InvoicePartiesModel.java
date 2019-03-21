@@ -1,10 +1,12 @@
-package pl.hansonq.models.EdiModel;
+package pl.hansonq.models.PSBModel;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
 
-@XmlRootElement(name = "Invoice-Parties")
-public class  InvoicePartiesModel {
+@XmlRootElement(name = "InvoiceParties")
+@XmlType(propOrder = {"buyerModel","sellerModel"})
+public class InvoicePartiesModel {
     private BuyerModel buyerModel;
     private SellerModel sellerModel;
 

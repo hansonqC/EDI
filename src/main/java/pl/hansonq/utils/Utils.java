@@ -1,4 +1,5 @@
 package pl.hansonq.utils;
+//package pl.
 
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -105,18 +106,18 @@ public class Utils {
         alert.show();
     }
 
-//    public static Boolean streamHash(int id_uzytkownik, String hashPassword, String password) {
-//
-//            boolean check = pl.com.stream.lib.code.UserPasswdCheck.checkPassword(id_uzytkownik, hashPassword, password);//id_uzytkownika, hasło w bazie , hasło podane przez użytkownika
-//            if(check){
-//                return true;
-//            }
-//            if(!check){
-//                return  false;
-//            }
-//
-//
-//        return false;
-//    }
+    public static Boolean streamHash(int id_uzytkownik, String hashPassword, String password) {
+
+            boolean check=pl.com.stream.lib.code.UserPasswdCheck.checkPassword(id_uzytkownik, hashPassword, password);//id_uzytkownika, hasło w bazie , hasło podane przez użytkownika
+            if(check){
+                return true;
+            }
+            if(!check){
+                return  false;
+            }
+
+
+        return false;
+    }
 
 }

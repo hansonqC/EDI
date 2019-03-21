@@ -7,24 +7,22 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="180.0" prefWidth="301.0" style="-fx-background-color: #0040ff;" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="pl.hansonq.controllers.LoginController">
+<AnchorPane prefHeight="154.0" prefWidth="280.0" style="-fx-background-color: #4d79ff;" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="pl.hansonq.controllers.LoginController">
    <children>
-      <TextField fx:id="textLogin" alignment="CENTER" layoutX="41.0" layoutY="65.0" prefHeight="25.0" prefWidth="217.0" promptText="login" />
-      <PasswordField fx:id="textPassword" alignment="CENTER" layoutX="41.0" layoutY="97.0" prefHeight="25.0" prefWidth="217.0" promptText="hasło" />
-      <Label fx:id="labelInfo" layoutX="11.0" layoutY="153.0" text="?" textFill="WHITE">
+      <TextField fx:id="textLogin" alignment="CENTER" layoutX="28.0" layoutY="19.0" prefHeight="30.0" prefWidth="224.0" promptText="login">
+         <font>
+            <Font size="14.0" />
+         </font></TextField>
+      <PasswordField fx:id="textPassword" alignment="CENTER" layoutX="28.0" layoutY="56.0" prefHeight="30.0" prefWidth="224.0" promptText="hasło">
+         <font>
+            <Font size="14.0" />
+         </font></PasswordField>
+      <Label fx:id="labelInfo" layoutX="6.0" layoutY="138.0" text="?" textFill="RED">
          <font>
             <Font name="System Bold" size="14.0" />
          </font>
       </Label>
-      <Button fx:id="buttonLogin" alignment="CENTER" defaultButton="true" layoutX="119.0" layoutY="131.0" mnemonicParsing="false" prefHeight="23.0" prefWidth="64.0" style="-fx-background-color: white;" text="OK">
-         <font>
-            <Font size="10.0" />
-         </font>
-      </Button>
-      <Button fx:id="buttonCancel" alignment="CENTER_RIGHT" cancelButton="true" layoutX="193.0" layoutY="131.0" mnemonicParsing="false" prefHeight="23.0" prefWidth="64.0" style="-fx-background-color: white;" text="Anuluj">
-         <font>
-            <Font size="10.0" />
-         </font>
-      </Button>
+      <Button fx:id="buttonLogin" alignment="CENTER" defaultButton="true" layoutX="29.0" layoutY="109.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="97.0" style="-fx-background-color: white;" text="OK" />
+      <Button fx:id="buttonCancel" alignment="CENTER_RIGHT" cancelButton="true" layoutX="154.0" layoutY="109.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="97.0" style="-fx-background-color: white;" text="Anuluj" textAlignment="CENTER" />
    </children>
 </AnchorPane>

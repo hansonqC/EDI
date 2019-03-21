@@ -1,28 +1,21 @@
 package pl.hansonq.models;
 
-import pl.hansonq.models.EdiModel.HeaderModel;
-import pl.hansonq.models.EdiModel.InvoicePartiesModel;
-import pl.hansonq.models.EdiModel.LinesModel;
-import pl.hansonq.models.EdiModel.SummaryModel;
+import pl.hansonq.models.PSBModel.*;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
-@XmlRootElement(name = "Document-Invoice")
-@XmlType(propOrder = {"headerModel", "invoicePartiesModel", "linesModel", "summaryModel"})
+@XmlRootElement(name = "DocumentInvoice")
+@XmlType(propOrder = {"headerModel", "invoicePartiesModel", "linesModel", "summaryModel","invoiceInfosModel"})
 public class DocumentInvoiceModel {
     private HeaderModel headerModel;
     private InvoicePartiesModel invoicePartiesModel;
     private LinesModel linesModel;
     private SummaryModel summaryModel;
+    private InvoiceInfosModel invoiceInfosModel;
 
-    public DocumentInvoiceModel(HeaderModel headerModel, InvoicePartiesModel invoicePartiesModel, LinesModel linesModel, SummaryModel summaryModel) {
-        this.headerModel = headerModel;
-        this.invoicePartiesModel = invoicePartiesModel;
-        this.linesModel = linesModel;
-        this.summaryModel = summaryModel;
-    }
+
 
     public DocumentInvoiceModel() {
     }
@@ -31,7 +24,7 @@ public class DocumentInvoiceModel {
         return headerModel;
     }
 
-    @XmlElement(name = "Invoice-Header")
+    @XmlElement(name = "InvoiceHeader")
     public void setHeaderModel(HeaderModel headerModel) {
         this.headerModel = headerModel;
     }
@@ -40,7 +33,7 @@ public class DocumentInvoiceModel {
         return invoicePartiesModel;
     }
 
-    @XmlElement(name = "Invoice-Parties")
+    @XmlElement(name = "InvoiceParties")
     public void setInvoicePartiesModel(InvoicePartiesModel invoicePartiesModel) {
         this.invoicePartiesModel = invoicePartiesModel;
     }
@@ -49,7 +42,7 @@ public class DocumentInvoiceModel {
         return linesModel;
     }
 
-    @XmlElement(name = "Invoice-Lines")
+    @XmlElement(name = "InvoiceLines")
     public void setLinesModel(LinesModel linesModel) {
         this.linesModel = linesModel;
     }
@@ -58,9 +51,17 @@ public class DocumentInvoiceModel {
         return summaryModel;
     }
 
-    @XmlElement(name = "Invoice-Summary")
+    @XmlElement(name = "InvoiceSummary")
     public void setSummaryModel(SummaryModel summaryModel) {
         this.summaryModel = summaryModel;
+    }
+
+    public InvoiceInfosModel getInvoiceInfosModel() {
+        return invoiceInfosModel;
+    }
+    @XmlElement(name = "InvoiceInfos")
+    public void setInvoiceInfosModel(InvoiceInfosModel invoiceInfosModel) {
+        this.invoiceInfosModel = invoiceInfosModel;
     }
 
     @Override

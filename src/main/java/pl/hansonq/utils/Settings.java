@@ -6,26 +6,29 @@ import javafx.scene.control.Alert;
 import org.apache.log4j.Logger;
 import org.apache.log4j.xml.DOMConfigurator;
 
+import javax.swing.*;
 import java.io.*;
 import java.util.Properties;
 
 public class Settings {
-    private static String serwer;
-    private static String login;
-    private static String password;
-    private static String database;
-    private static String systemDatabase;
+    private static String serwer;// = "rajmanx";
+    private static String login; //= "sysdba";
+    private static String password;// = "masterkey";
+    private static String database;// = "/var/local/baza/RAJMANSJ_TEST.gdb";
+    private static String systemDatabase;// = "C:\\STREAM soft\\STREAM soft SQL\\Baza\\SYSTEMST.FB";
     private static String lastVisitedDirectory;
-    private static String sqlLink;
-    private static String docPath;
-    private static String picturesPath;
-    private static String last_path;
-    private static String separator;
-    private static String quotas;
-    private static String listOfInvoices;
-    private static String kodUrzZew;
-    private static String magazyn;
-
+    private static String sqlLink;// = "jdbc:firebirdsql:localhost/3050:C:\\STREAM soft\\STREAM soft SQL\\Baza\\RAJMANSJ.FB?sql_dialect=3&amp;encoding=UTF8";
+    private static String docPath;// = "C:";
+    private static String picturesPath;// = "C:";
+    private static String last_path;// = "C:";
+    private static String separator;// = ";";
+    private static String quotas;//= "\"";
+    private static String listOfInvoices;// = "C:\\Users\\Mm2017\\Desktop\\EDI_IMPORT_RAJMAN\\RAJMAN FAKTURY XML\\";
+    private static String kodUrzZew;// = "EDI_IMPORT";
+    private static String magazyn;// = "10001";
+    private static String system;
+    private static String id_cechy_psb;// = "10011";
+    private static String lastLogin;// = "Admin";
 
 
     private static int IdCechaNazwaInternetowa;
@@ -152,44 +155,123 @@ public class Settings {
     final static Logger logger = Logger.getLogger(Settings.class);
 
 
+    public static String getSystem() {
+        return system;
+    }
 
+    public static void setSystem(String system) {
+        Settings.system = system;
+    }
+
+    public static String getId_cechy_psb() {
+        return id_cechy_psb;
+    }
+
+    public static void setId_cechy_psb(String id_cechy_psb) {
+        Settings.id_cechy_psb = id_cechy_psb;
+    }
+
+    public static String getLastLogin() {
+        return lastLogin;
+    }
+
+    public static void setLastLogin(String lastLogin) {
+        Settings.lastLogin = lastLogin;
+    }
 
     public static void loadSettings() {
         Properties prop = new Properties();
         InputStream input = null;
 
         try {
-          input = new FileInputStream("config.properties");
+            input = new FileInputStream("config.properties");
             if (input == null) {
                 System.out.println("Brak pliku z ustawieniami");
                 return;
             }
             prop.loadFromXML(input);
-            Settings.setSerwer(prop.getProperty("serwer"));
+           // JOptionPane.showMessageDialog(null,"ok");
+            if ((prop.getProperty("serwer").isEmpty()) || (prop.getProperty("serwer").equals(""))) {
+                Settings.setSerwer("uzupełnij");
+            } else {
+                Settings.setSerwer(prop.getProperty("serwer"));
+            }
             Settings.setLogin(prop.getProperty("login"));
             Settings.setPassword(prop.getProperty("password"));
             Settings.setDatabase(prop.getProperty("database"));
             Settings.setSystemDatabase(prop.getProperty("systemDatabase"));
             Settings.setSqlLink(prop.getProperty("sqlLink"));
-            Settings.setDocPath(prop.getProperty("docPath"));
-            Settings.setPicturesPath(prop.getProperty("picturesPath"));
-            Settings.setQuotas(prop.getProperty("quotas"));
-            Settings.setSeparator(prop.getProperty("separator"));
+            //    Settings.setDocPath(prop.getProperty("docPath"));
+            //   Settings.setPicturesPath(prop.getProperty("picturesPath"));
+            //  Settings.setQuotas(prop.getProperty("quotas"));
+            //  Settings.setSeparator(prop.getProperty("separator"));
             Settings.setListOfInvoices(prop.getProperty("invoices"));
-            Settings.setKodUrzZew(prop.getProperty("kodUrzZew"));
+          Settings.setKodUrzZew(prop.getProperty("kodUrzZew"));
             Settings.setMagazyn(prop.getProperty("magazyn"));
+          //  Settings.setSystem(prop.getProperty("system"));
+            Settings.setId_cechy_psb(prop.getProperty("id_cechy_psb"));
+            // Settings.setLastLogin(prop.getProperty("lastLogin"));
+            //   JOptionPane.showMessageDialog(null,"10");
+
+            if ((prop.getProperty("lastLogin").isEmpty()) || (prop.getProperty("lastLogin").equals(""))) {
+                Settings.setLastLogin("uzupełnij");
+            //    JOptionPane.showMessageDialog(null, "11");
+            } else {
+                Settings.setLastLogin(prop.getProperty("lastLogin"));
+              //  JOptionPane.showMessageDialog(null, "12");
+            }
 
 
             //  Settings.setLastVisitedDirectory(prop.getProperty("lastVisitedDirectory"));
             //  loadConnectorSettings();
 
-
+//input.close();
         } catch (Exception ex) {
-            Utils.createSimpleDialog("Odczyt danych", "", "Błąd odczytu ustawień !", Alert.AlertType.ERROR);
+            JOptionPane.showMessageDialog(null, "Błąd odczytu ustawień\nUtworzono nowy plik config.properties", "EDI RAJMAN", JOptionPane.ERROR_MESSAGE);
+            try (BufferedWriter bw = new BufferedWriter(new PrintWriter("config.properties"))) {
+                bw.write("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>");
+                bw.newLine();
+                bw.write("<!DOCTYPE properties SYSTEM \"http://java.sun.com/dtd/properties.dtd\">");
+                bw.newLine();
+                bw.write("<properties>");
+                bw.newLine();
+                bw.write("<entry key=\"system\"/>");
+                bw.newLine();
+                bw.write("<entry key=\"kodUrzZew\">EDI_IMPORT</entry>");
+                bw.newLine();
+                bw.write("<entry key=\"magazyn\">MATERIAŁY BUDOWLANE</entry>");
+                bw.newLine();
+                bw.write("<entry key=\"invoices\">C:\\Users\\Mm2017\\Desktop\\EDI_IMPORT_RAJMAN\\RAJMAN FAKTURY XML\\</entry>");
+                bw.newLine();
+                bw.write("<entry key=\"serwer\">rajmanx</entry>");
+                bw.newLine();
+                bw.write("<entry key=\"login\">sysdba</entry>");
+                bw.newLine();
+                bw.write("<entry key=\"id_cechy_psb\">10011</entry>");
+                bw.newLine();
+                bw.write("<entry key=\"sqlLink\">jdbc:firebirdsql:rajmanx/3050:/var/local/baza/RAJMANSJ_TEST.gdb?sql_dialect=3&amp;encoding=UTF8</entry>");
+                bw.newLine();
+                bw.write("<entry key=\"database\">/var/local/baza/RAJMANSJ_TEST.gdb</entry>");
+                bw.newLine();
+                bw.write("<entry key=\"systemDatabase\">/var/local/baza/SYSTEMST.gdb</entry>");
+                bw.newLine();
+                bw.write("<entry key=\"password\">masterkey</entry>");
+                bw.newLine();
+                bw.write("<entry key=\"lastLogin\">Admin</entry>");
+                bw.newLine();
+                bw.write("</properties>");
+                bw.close();
+                JOptionPane.showMessageDialog(null,"Zapisano");
 
 
-        }
-       finally {
+            } catch (IOException e) {
+                e.printStackTrace();
+                Utils.createSimpleDialog("Odczyt danych", "", "Błąd odczytu ustawień !", Alert.AlertType.ERROR);
+
+            }
+
+
+        } finally {
             if (input != null) {
                 try {
                     input.close();

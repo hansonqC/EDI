@@ -1,28 +1,26 @@
 package pl.hansonq.controllers;
 
 
+import com.google.gson.Gson;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
+import javafx.scene.control.*;
 import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
+import javafx.stage.Stage;
 import org.apache.log4j.Logger;
 import org.apache.log4j.xml.DOMConfigurator;
 import pl.hansonq.dao.DocumentInvoiceDao;
 import pl.hansonq.dao.Impl.DocumentInvoiceDaoImpl;
-import pl.hansonq.utils.Settings;
-import pl.hansonq.utils.Utils;
-import javafx.application.Platform;
-import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
-import javafx.scene.control.*;
-import javafx.stage.FileChooser;
-import javafx.stage.Stage;
+import pl.hansonq.utils.Preferences;
 import pl.hansonq.utils.Settings;
 import pl.hansonq.utils.Utils;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import javax.swing.*;
+import java.io.*;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,14 +29,12 @@ import java.util.ResourceBundle;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static pl.hansonq.utils.Settings.getDatabase;
-
 public class SettingsController implements Initializable {
     DocumentInvoiceDao documentInvoiceDao = new DocumentInvoiceDaoImpl();
     List<String> magazyny;
-
+    public static final String CONFIG_FILE = "config.txt";
     @FXML
-    private TextField textLogin, textDatabase, textSerwer, textInvoicesPath, textUrzZew;
+    private TextField textLogin, textDatabase, textSystemDatabase, textSerwer, textInvoicesPath, textUrzZew, textPSB;
     @FXML
     private PasswordField textPassword;
     @FXML
@@ -65,34 +61,46 @@ public class SettingsController implements Initializable {
             logger.debug(ex.getMessage());
             ex.printStackTrace();
         }
+        Preferences.getPreferences();
         // choosing();
         //  buttonFileChoose.setOnMouseClicked(e -> fileChooseOpen());
         buttonDatabaseChoose.setOnMouseClicked(e -> databaseChoose());
         buttonInvoicesPath.setOnMouseClicked(e -> docChoose());
-        buttonSave.setOnMouseClicked(e -> saveSettings());
+        buttonSave.setOnMouseClicked(e -> SavePreferences());
         buttonSave.requestFocus();
         //  buttonSystemDatabaseChoose.setOnMouseClicked(e->SystemDatabaseChoose());
         //  buttonPictureChoose.setOnMouseClicked(e->PicturesPathSetting());
         //   toogleButton.setOnMouseClicked(e -> turning());
-        loadS();
-        magazyny=new ArrayList<>();
-        magazyny=documentInvoiceDao.getMagazyn();
-        ObservableList<String>lista=FXCollections.observableArrayList(magazyny);
+        // loadS();
+        magazyny = new ArrayList<>();
+        try {
+            magazyny = documentInvoiceDao.getMagazyn();
+            ObservableList<String> lista = FXCollections.observableArrayList(magazyny);
 
-        magazyn.getItems().addAll(lista);
+            magazyn.getItems().addAll(lista);
+        } catch (Exception ex) {
+            logger.debug(ex.fillInStackTrace());
+        }
+        initDefaultValues();
 
 
     }
 
 
     private void loadS() {
-        textSerwer.setText(Settings.getSerwer());
-        textLogin.setText(Settings.getLogin());
-        textPassword.setText(Settings.getPassword());
-        textDatabase.setText(Settings.getDatabase());
-        textInvoicesPath.setText(Settings.getListOfInvoices());
-        textUrzZew.setText(Settings.getKodUrzZew());
-        magazyn.setValue(Settings.getMagazyn());
+        try {
+            textSerwer.setText(Settings.getSerwer());
+            textLogin.setText(Settings.getLogin());
+            textPassword.setText(Settings.getPassword());
+            textDatabase.setText(Settings.getDatabase());
+            textInvoicesPath.setText(Settings.getListOfInvoices());
+            textSystemDatabase.setText(Settings.getSystemDatabase());
+            textUrzZew.setText(Settings.getKodUrzZew());
+            magazyn.setValue(Settings.getMagazyn());
+            textPSB.setText(Settings.getId_cechy_psb());
+        } catch (Exception ex) {
+            logger.debug(ex.fillInStackTrace());
+        }
         //  textSystemDatabase.setText(Settings.getSystemDatabase());
         // textDoc.setText(Settings.getDocPath());
         // textPicture.setText(Settings.getPicturesPath());
@@ -108,6 +116,58 @@ public class SettingsController implements Initializable {
     }
 
 
+    private void initDefaultValues() {
+        Preferences preferences = Preferences.getPreferences();
+        textSerwer.setText(String.valueOf(preferences.getSerwer()));
+        textLogin.setText(String.valueOf(preferences.getLogin()));
+        textPassword.setText(String.valueOf(preferences.getPassword()));
+        textDatabase.setText(String.valueOf(preferences.getDatabase()));
+        textSystemDatabase.setText(String.valueOf(preferences.getSystemDatabase()));
+        textInvoicesPath.setText(String.valueOf(preferences.getInvoices()));
+        textUrzZew.setText(String.valueOf(preferences.getKodUrzZew()));
+        magazyn.setValue(String.valueOf(preferences.getMagazyn()));
+        textPSB.setText(Preferences.getPreferences().getIdCechaPSB());
+
+
+        //  textParametr.setText(String.valueOf(preferences.get));
+    }
+
+    private void SavePreferences() {
+        Preferences preferences = new Preferences();
+        Gson gson = new Gson();
+        Writer writer;
+        preferences.setSerwer(textSerwer.getText());
+        preferences.setLogin(textLogin.getText());
+        preferences.setPassword(textPassword.getText());
+        preferences.setDatabase(textDatabase.getText());
+        preferences.setSystemDatabase(textSystemDatabase.getText());
+        preferences.setInvoices(textInvoicesPath.getText());
+        preferences.setKodUrzZew(textUrzZew.getText());
+        preferences.setMagazyn(magazyn.getValue().toString());
+        preferences.setIdCechaPSB(textPSB.getText());
+        try {
+            writer = new FileWriter(CONFIG_FILE);
+            try {
+
+                gson.toJson(preferences, writer);
+            } catch (Exception e) {
+                logger.debug(e.fillInStackTrace());
+            } finally {
+                try {
+                    writer.close();
+                    Stage stage = (Stage) buttonSave.getScene().getWindow();
+                    stage.close();
+                } catch (Exception ex) {
+                    logger.debug(ex.fillInStackTrace());
+                }
+
+
+            }
+        } catch (Exception ex) {
+            logger.debug(ex.fillInStackTrace());
+        }
+    }
+
     private void saveSettings() {
 
         Properties prop = new Properties();
@@ -121,12 +181,13 @@ public class SettingsController implements Initializable {
             prop.setProperty("serwer", textSerwer.getText());
             prop.setProperty("login", textLogin.getText());
             prop.setProperty("password", textPassword.getText());
-
             prop.setProperty("database", textDatabase.getText());
+            prop.setProperty("systemDatabase", textSystemDatabase.getText());
             prop.setProperty("sqlLink", "jdbc:firebirdsql:" + textSerwer.getText() + "/3050:" + textDatabase.getText() + "?sql_dialect=3&encoding=UTF8");
             prop.setProperty("invoices", textInvoicesPath.getText());
             prop.setProperty("kodUrzZew", textUrzZew.getText());
-            prop.setProperty("magazyn",magazyn.getValue().toString());
+            prop.setProperty("magazyn", magazyn.getValue().toString());
+            prop.setProperty("id_cechy_psb", textPSB.getText());
 
 
             // OPCJE FTP
@@ -141,12 +202,20 @@ public class SettingsController implements Initializable {
 //            prop.setProperty("autosending", String.valueOf(choose));
             // save properties to project root folder
             prop.storeToXML(output, null);
-            Settings.loadSettings();
+            //    JOptionPane.showMessageDialog(null, "Zapisano");
+            try {
+                Settings.loadSettings();
+                //       JOptionPane.showMessageDialog(null,"ok");
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(null, ex.fillInStackTrace());
+                ex.printStackTrace();
+            }
             loadS();
 
             Stage stage = (Stage) buttonSave.getScene().getWindow();
             stage.close();
         } catch (Exception ex) {
+            logger.debug(ex.fillInStackTrace());
             Platform.runLater(() -> Utils.createSimpleDialog("Zapis danych", "", "Błąd zapisu ustawień !\n" +
                     "\"Sprawdź poprawność wprowadzonych danych !\"", Alert.AlertType.ERROR));
 
@@ -156,7 +225,8 @@ public class SettingsController implements Initializable {
                 try {
                     output.close();
                 } catch (IOException e) {
-                    Platform.runLater(() -> Utils.createSimpleDialog("Zapis danych", "", "Błąd zapisuu ustawień !\n" +
+                    logger.debug(e.fillInStackTrace());
+                    Platform.runLater(() -> Utils.createSimpleDialog("Zapis danych", "", "Błąd zapisu ustawień !\n" +
                             "Sprawdź poprawność wprowadzonych danych !", Alert.AlertType.ERROR));
 
                 }
@@ -203,7 +273,7 @@ public class SettingsController implements Initializable {
                 try {
                     output.close();
                 } catch (IOException e) {
-                    Platform.runLater(() -> Utils.createSimpleDialog("Zapis danych", "", "Błąd zapisuu ustawień !\n" +
+                    Platform.runLater(() -> Utils.createSimpleDialog("Zapis danych", "", "Błąd zapisu ustawień !\n" +
                             "Sprawdź poprawność wprowadzonych danych !", Alert.AlertType.ERROR));
 
                 }

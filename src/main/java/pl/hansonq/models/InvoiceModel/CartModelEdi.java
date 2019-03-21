@@ -10,6 +10,8 @@ public class CartModelEdi {
     private String indeks;
     private String kartName;
     private String zamdostNumber;
+    private String supplierItemCode;
+    private String unit;
 
     // private String netPriceWithoutFee;
 
@@ -89,18 +91,31 @@ public class CartModelEdi {
         this.zamdostNumber = zamdostNumber;
     }
 
+    public String getSupplierItemCode() {
+        return supplierItemCode;
+    }
+
+    public void setSupplierItemCode(String supplierItemCode) {
+        this.supplierItemCode = supplierItemCode;
+    }
+
+    public String getUnit() {
+        return unit;
+    }
+
+    public void setUnit(String unit) {
+        this.unit = unit;
+    }
+
     @Override
     public String toString() {
-        return "CartModelEdi{" +
-                "ean='" + ean + '\'' +
-                ", netPice='" + netPice + '\'' +
-                ", grossPrice='" + grossPrice + '\'' +
-                ", quantity='" + quantity + '\'' +
-                ", supplierCode='" + supplierCode + '\'' +
-                ", tax='" + tax + '\'' +
-                ", indeks='" + indeks + '\'' +
-                ", kartName='" + kartName + '\'' +
-                ", zamdostNumber='" + zamdostNumber + '\'' +
-                '}';
+        return "Kartoteka : " +
+                "EAN  :  " + ean + "\n" +
+                "Kod producenta / indeks  :  " + indeks + "\n" +
+                "Nazwa kartoteki  :  " + kartName + "\n"+
+                "Jednostka miary  :  " + unit + "\n"+
+                "Cena netto  :  " + netPice + "\n" +
+                "VAT  :  " + tax + "\n";
+
     }
 }

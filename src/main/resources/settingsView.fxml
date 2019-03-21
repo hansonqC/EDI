@@ -12,10 +12,10 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane fx:id="anchorPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="290.0" prefWidth="585.0" style="-fx-background-color: #3366ff;" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="pl.hansonq.controllers.SettingsController">
+<AnchorPane fx:id="anchorPane" layoutY="1.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="323.0" prefWidth="585.0" style="-fx-background-color: #4d79ff;" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="pl.hansonq.controllers.SettingsController">
    <children>
       <HBox alignment="BASELINE_LEFT" layoutX="11.0" layoutY="618.0" prefHeight="35.0" prefWidth="360.0" />
-      <Button fx:id="buttonSave" defaultButton="true" layoutX="260.0" layoutY="251.0" minWidth="70.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="70.0" text="Zapisz" />
+      <Button fx:id="buttonSave" defaultButton="true" layoutX="260.0" layoutY="287.0" minWidth="70.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="70.0" text="Zapisz" />
       <PasswordField fx:id="textPassword" alignment="CENTER" layoutX="159.0" layoutY="54.0" prefHeight="25.0" prefWidth="124.0" promptText="hasło" />
       <TextField fx:id="textLogin" alignment="CENTER" layoutX="18.0" layoutY="54.0" prefHeight="17.0" prefWidth="124.0" promptText="login" />
       <Label layoutX="18.0" layoutY="8.0" text="Ustawienia bazy danych :" textFill="WHITE">
@@ -37,7 +37,7 @@
          </font></Label>
       <TextField fx:id="textDatabase" layoutX="18.0" layoutY="106.0" prefHeight="25.0" prefWidth="468.0" promptText="baza danych" />
       <Button fx:id="buttonDatabaseChoose" layoutX="500.0" layoutY="106.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="70.0" text="Wybierz ..." />
-      <Separator layoutX="-4.0" layoutY="228.0" prefHeight="17.0" prefWidth="597.0" />
+      <Separator layoutX="-1.0" layoutY="273.0" prefHeight="17.0" prefWidth="597.0" />
       <Label layoutX="18.0" layoutY="204.0" text="Ustawienia importu  wartości domyślne" textFill="#1e1aff" visible="false">
          <font>
             <Font name="System Bold" size="14.0" />
@@ -157,24 +157,37 @@
             <Font name="System Bold" size="12.0" />
          </font>
       </Label>
-      <Label layoutX="19.0" layoutY="137.0" text="Katalog z plikami faktur :" textFill="WHITE">
+      <Label layoutX="19.0" layoutY="182.0" text="Katalog z plikami faktur :" textFill="WHITE">
          <font>
             <Font name="System Bold" size="12.0" />
          </font>
       </Label>
-      <TextField fx:id="textInvoicesPath" layoutX="18.0" layoutY="154.0" prefHeight="25.0" prefWidth="468.0" promptText="baza danych" />
-      <Button fx:id="buttonInvoicesPath" layoutX="500.0" layoutY="154.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="70.0" text="Wybierz ..." />
-      <TextField fx:id="textUrzZew" layoutX="18.0" layoutY="202.0" prefHeight="25.0" prefWidth="186.0" promptText="kod urządzenia zewwnętrznego" />
-      <Label layoutX="19.0" layoutY="184.0" text="Kod urządzenia zewnętrznego :" textFill="WHITE">
+      <TextField fx:id="textInvoicesPath" layoutX="18.0" layoutY="200.0" prefHeight="25.0" prefWidth="468.0" promptText="baza danych" />
+      <Button fx:id="buttonInvoicesPath" layoutX="500.0" layoutY="200.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="70.0" text="Wybierz ..." />
+      <TextField fx:id="textUrzZew" layoutX="19.0" layoutY="248.0" prefHeight="25.0" prefWidth="186.0" promptText="kod urządzenia zewwnętrznego" />
+      <Label layoutX="19.0" layoutY="231.0" text="Kod urządzenia zewnętrznego :" textFill="WHITE">
          <font>
             <Font name="System Bold" size="12.0" />
          </font>
       </Label>
-      <ComboBox fx:id="magazyn" layoutX="239.0" layoutY="201.0" prefHeight="25.0" prefWidth="216.0" />
-      <Label layoutX="239.0" layoutY="184.0" text="Magazyn :" textFill="WHITE">
+      <ComboBox fx:id="magazyn" layoutX="239.0" layoutY="247.0" prefHeight="25.0" prefWidth="247.0" />
+      <Label layoutX="239.0" layoutY="230.0" text="Magazyn :" textFill="WHITE">
          <font>
             <Font name="System Bold" size="12.0" />
          </font>
       </Label>
+      <TextField fx:id="textPSB" alignment="CENTER" layoutX="501.0" layoutY="54.0" prefHeight="25.0" prefWidth="70.0" promptText="cecha PSB" />
+      <Label layoutX="501.0" layoutY="35.0" prefHeight="17.0" prefWidth="85.0" text="ID CECHY :" textFill="WHITE">
+         <font>
+            <Font name="System Bold" size="12.0" />
+         </font>
+      </Label>
+      <Label layoutX="20.0" layoutY="137.0" text="Lokalizacja systemowej bazy danych :" textFill="WHITE">
+         <font>
+            <Font name="System Bold" size="12.0" />
+         </font>
+      </Label>
+      <TextField fx:id="textSystemDatabase" layoutX="19.0" layoutY="154.0" prefHeight="25.0" prefWidth="468.0" promptText="baza danych" />
+      <Button fx:id="buttonDatabaseChoose1" layoutX="501.0" layoutY="154.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="70.0" text="Wybierz ..." />
    </children>
 </AnchorPane>

@@ -39,6 +39,7 @@ public class CartModel {
     private String grupaRabatowa;
     private String grupaBonusowa;
     private String kodProducent;
+    private String vat;
 
     private String kodGrupaKartotekowa1;
     private String kodGrupaKartotekowa2;
@@ -502,6 +503,14 @@ public class CartModel {
         this.wartoscCechy = wartoscCechy;
     }
 
+    public String getVat() {
+        return vat;
+    }
+
+    public void setVat(String vat) {
+        this.vat = vat;
+    }
+
     @Override
     public String toString() {
         return "CartModel{" +
@@ -529,26 +538,26 @@ public class CartModel {
                 ", idPriorytet='" + idPriorytet + '\'' +
                 ", iloscOpakowanieZbiorcze1='" + iloscOpakowanieZbiorcze1 + '\'' +
                 ", iloscOpakowanieZbiorcze2='" + iloscOpakowanieZbiorcze2 + '\'' +
-                ", iloscoOpakowanieZbiorcze3='" + iloscOpakowanieZbiorcze3 + '\'' +
+                ", iloscOpakowanieZbiorcze3='" + iloscOpakowanieZbiorcze3 + '\'' +
                 ", idStawkiVat='" + idStawkiVat + '\'' +
                 ", opis='" + opis + '\'' +
                 ", stronaWWW='" + stronaWWW + '\'' +
                 ", grupaRabatowa='" + grupaRabatowa + '\'' +
                 ", grupaBonusowa='" + grupaBonusowa + '\'' +
                 ", kodProducent='" + kodProducent + '\'' +
-                ", kodGgrupaKartotekowa1='" + kodGrupaKartotekowa1 + '\'' +
+                ", vat='" + vat + '\'' +
+                ", kodGrupaKartotekowa1='" + kodGrupaKartotekowa1 + '\'' +
                 ", kodGrupaKartotekowa2='" + kodGrupaKartotekowa2 + '\'' +
                 ", kodGrupaKartotekowa3='" + kodGrupaKartotekowa3 + '\'' +
                 ", kodGrupaKartotekowa4='" + kodGrupaKartotekowa4 + '\'' +
                 ", kodGrupaKartotekowa5='" + kodGrupaKartotekowa5 + '\'' +
                 ", kodGrupaKartotekowaX='" + kodGrupaKartotekowaX + '\'' +
-
                 ", idDodatkowegoOpakowanieZbiorczegoEAN='" + idDodatkowegoOpakowanieZbiorczegoEAN + '\'' +
                 ", idOpakowaniaZbiorczego1='" + idOpakowaniaZbiorczego1 + '\'' +
                 ", idOpakowaniaZbiorczego2='" + idOpakowaniaZbiorczego2 + '\'' +
                 ", idOpakowaniaZbiorczego3='" + idOpakowaniaZbiorczego3 + '\'' +
                 ", idTypOpisu='" + idTypOpisu + '\'' +
-
+                ", idPodstawowejStawkiVat='" + idPodstawowejStawkiVat + '\'' +
                 ", idRodzajuGrupyKartotekowejProducent='" + idRodzajuGrupyKartotekowejProducent + '\'' +
                 ", idRodzajuGrupyKartotekowej='" + idRodzajuGrupyKartotekowej + '\'' +
                 ", idRodzajuGrupyKartotekowej1='" + idRodzajuGrupyKartotekowej1 + '\'' +

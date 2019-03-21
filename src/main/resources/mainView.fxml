@@ -1,24 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.Button?>
-<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.ProgressBar?>
 <?import javafx.scene.control.Separator?>
-<?import javafx.scene.control.TextArea?>
-<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.TableView?>
 <?import javafx.scene.input.KeyCodeCombination?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane maxHeight="670.0" maxWidth="950.0" minHeight="-Infinity" minWidth="-Infinity" prefHeight="570.0" prefWidth="500.0" style="-fx-background-color: #3366ff;" stylesheets="@style.css" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="pl.hansonq.controllers.MainController">
+<AnchorPane maxHeight="670.0" maxWidth="950.0" minHeight="-Infinity" minWidth="-Infinity" prefHeight="570.0" prefWidth="500.0" style="-fx-background-color: #4d79ff;" stylesheets="@style.css" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="pl.hansonq.controllers.MainController">
    <children>
-      <AnchorPane layoutY="104.0" prefHeight="267.0" prefWidth="950.0" AnchorPane.bottomAnchor="299.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="104.0" />
+      <AnchorPane layoutY="84.0" prefHeight="383.0" prefWidth="500.0" AnchorPane.bottomAnchor="103.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="84.0">
+         <children>
+            <ComboBox fx:id="combo" layoutY="1.0" prefHeight="26.0" prefWidth="227.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" />
+            <TableView fx:id="table" layoutX="21.0" layoutY="38.0" prefHeight="331.0" prefWidth="485.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" />
+         </children></AnchorPane>
       <HBox layoutX="1.0" layoutY="-1.0" />
       <AnchorPane layoutX="1.0" layoutY="-1.0" prefHeight="30.0" prefWidth="142.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
          <children>
@@ -58,48 +60,32 @@
             </MenuBar>
          </children>
       </AnchorPane>
-      <AnchorPane layoutX="14.0" layoutY="42.0" prefHeight="62.0" prefWidth="912.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
+      <AnchorPane layoutY="345.0" prefHeight="245.0" prefWidth="500.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
          <children>
-            <Button fx:id="loadButton" alignment="CENTER" contentDisplay="CENTER" defaultButton="true" layoutX="5.0" layoutY="13.0" mnemonicParsing="false" prefHeight="30.0" prefWidth="102.0" text="Wczytaj plik..." visible="false" AnchorPane.leftAnchor="10.0" />
-            <TextField fx:id="textFileImport" editable="false" layoutX="113.0" layoutY="14.0" prefHeight="30.0" prefWidth="297.0" style="-fx-background-color: white;" visible="false" AnchorPane.leftAnchor="120.0" AnchorPane.rightAnchor="8.0">
+            <Button fx:id="buttonImport" layoutX="203.0" layoutY="167.0" mnemonicParsing="false" prefHeight="30.0" prefWidth="93.0" text="Importuj " textFill="#ff0404">
                <font>
-                  <Font size="10.0" />
+                  <Font name="System Bold" size="12.0" />
                </font>
-            </TextField>
-            <CheckBox fx:id="check" layoutX="17.0" layoutY="29.0" mnemonicParsing="false" text="Zaznacz wszystkie" textFill="WHITE" visible="false">
+            </Button>
+            <Separator layoutX="8.0" layoutY="149.0" prefHeight="17.0" prefWidth="483.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" />
+            <ProgressBar fx:id="progressBar" layoutX="14.0" layoutY="131.0" prefHeight="18.0" prefWidth="421.0" progress="0.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" />
+            <Button fx:id="buttonRefresh" layoutX="411.0" layoutY="169.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="81.0" text="Odśwież">
                <font>
-                  <Font name="Calibri Light Italic" size="12.0" />
+                  <Font name="System Bold" size="10.0" />
                </font>
-            </CheckBox>
+            </Button>
+            <Label fx:id="labelVersion" layoutX="9.0" layoutY="165.0" text="Label" textFill="WHITE" />
          </children>
       </AnchorPane>
-      <AnchorPane layoutY="362.0" prefHeight="197.0" prefWidth="500.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
-         <children>
-            <Button fx:id="buttonImport" layoutX="8.0" layoutY="169.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="81.0" text="Importuj " textFill="#ff0404">
-               <font>
-                  <Font name="System Bold" size="10.0" />
-               </font>
-            </Button>
-            <Label fx:id="labelVersion" layoutX="900.0" layoutY="136.0" prefHeight="15.0" prefWidth="50.0" textFill="WHITE">
-               <font>
-                  <Font size="10.0" />
-               </font>
-            </Label>
-            <Separator layoutX="8.0" layoutY="149.0" prefHeight="17.0" prefWidth="483.0" AnchorPane.leftAnchor="8.0" AnchorPane.rightAnchor="9.0" />
-            <ProgressBar fx:id="progressBar" layoutX="8.0" layoutY="127.0" prefHeight="18.0" prefWidth="421.0" progress="0.0" AnchorPane.leftAnchor="8.0" AnchorPane.rightAnchor="8.0" />
-            <Button fx:id="buttonRefresh" layoutX="209.0" layoutY="169.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="81.0" text="Odśwież">
-               <font>
-                  <Font name="System Bold" size="10.0" />
-               </font>
-            </Button>
-            <Button fx:id="buttonConnect" layoutX="8.0" layoutY="203.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="127.0" text="Powiąż PZ z ZAMDOST" visible="false">
-               <font>
-                  <Font name="System Bold" size="10.0" />
-               </font>
-            </Button>
-         </children>
-      </AnchorPane>
-      <TextArea fx:id="textArea2" layoutX="9.0" layoutY="94.0" prefHeight="373.0" prefWidth="679.0" AnchorPane.leftAnchor="9.0" AnchorPane.rightAnchor="8.0" AnchorPane.topAnchor="94.0" />
-      <ListView fx:id="listOfDocuments" layoutX="9.0" layoutY="46.0" prefHeight="421.0" prefWidth="483.0" style="-fx-background-color: lightblue;" AnchorPane.leftAnchor="9.0" AnchorPane.rightAnchor="8.0" />
+      <Label fx:id="labelUser" layoutX="9.0" layoutY="35.0" textFill="WHITE">
+         <font>
+            <Font size="10.0" />
+         </font>
+      </Label>
+      <Label layoutX="14.0" layoutY="65.0" text="Wybierz magazyn na który zostanie przyjęty towar :" textFill="WHITE" AnchorPane.leftAnchor="10.0">
+         <font>
+            <Font name="System Bold" size="12.0" />
+         </font>
+      </Label>
    </children>
 </AnchorPane>

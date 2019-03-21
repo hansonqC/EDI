@@ -5,6 +5,7 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.xml.DOMConfigurator;
 import pl.hansonq.models.CartBpModel;
 import pl.hansonq.models.DocumentInvoiceModel;
+import pl.hansonq.models.PSBModel.TestModel;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -80,6 +81,18 @@ public class JaxB {
 //    }
 //
 
+    public static TestModel jaxbTestModelXMLToObject(String file) {
+        try {
+            JAXBContext context = JAXBContext.newInstance(TestModel.class);
+            Unmarshaller un = context.createUnmarshaller();
+            TestModel testModel = (TestModel) un.unmarshal(new File(file));
+            //  System.out.println(cartBpModel.toString());
+            return testModel;
+        } catch (JAXBException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
     public static CartBpModel jaxbCartBpModelXMLToObject(String file) {
         try {
             JAXBContext context = JAXBContext.newInstance(CartBpModel.class);
@@ -97,13 +110,15 @@ public class JaxB {
             JAXBContext context = JAXBContext.newInstance(DocumentInvoiceModel.class);
             Unmarshaller un = context.createUnmarshaller();
             DocumentInvoiceModel documentInvoiceModel = (DocumentInvoiceModel) un.unmarshal(new File(file));
-         //     System.out.println(documentInvoiceModel.toString());
+              System.out.println(documentInvoiceModel.toString());
             return documentInvoiceModel;
         } catch (JAXBException e) {
             e.printStackTrace();
         }
         return null;
     }
+
+
 
 //    public static KatalogModel jaxbKatalogXMLToObject(String file) {
 //        try {

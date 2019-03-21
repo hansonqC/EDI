@@ -14,3 +14,7 @@
 .toggle-button:selected {
     -fx-background-color: green;
 }
+.list-cell
+{
+  -fx-font: 10pt "Arial";
+}

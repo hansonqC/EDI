@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */ 
-package org.pdfsam.ui;
+package pl.hansonq.utils.progress_indicators;
 
 import javafx.animation.Animation;
 import javafx.animation.Interpolator;

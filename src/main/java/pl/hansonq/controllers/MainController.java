@@ -1,15 +1,10 @@
 package pl.hansonq.controllers;
 
 import javafx.application.Platform;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -22,60 +17,40 @@ import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
-import javafx.scene.control.cell.CheckBoxListCell;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
-import javafx.scene.input.KeyCode;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
-import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
-import javafx.stage.WindowEvent;
-import javafx.util.Callback;
-import jdk.nashorn.internal.scripts.JO;
 import org.apache.log4j.Logger;
 import org.apache.log4j.xml.DOMConfigurator;
-import org.openxmlformats.schemas.officeDocument.x2006.docPropsVTypes.OstorageDocument;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import pl.hansonq.dao.CartDao;
 import pl.hansonq.dao.DocumentInvoiceDao;
-import pl.hansonq.dao.Impl.CartDaoImpl;
 import pl.hansonq.dao.Impl.DocumentInvoiceDaoImpl;
+import pl.hansonq.models.CartModel;
 import pl.hansonq.models.DocumentInvoiceModel;
-import pl.hansonq.models.PSBModel.LineModel;
-import pl.hansonq.models.PSBModel.RowModel;
-import pl.hansonq.models.PSBModel.SellerModel;
 import pl.hansonq.models.InvoiceModel.CartModelEdi;
 import pl.hansonq.models.InvoiceModel.InvoiceModel;
-import pl.hansonq.models.InvoiceModel.OrderModel;
+import pl.hansonq.models.PSBModel.LineModel;
+import pl.hansonq.models.PSBModel.RowModel;
 import pl.hansonq.utils.FirebirdConnector;
 import pl.hansonq.utils.JaxB;
-import pl.hansonq.utils.Settings;
+import pl.hansonq.utils.Preferences;
 import pl.hansonq.utils.Utils;
 import pl.hansonq.utils.progress_indicators.RingProgressIndicator;
 
-
 import javax.swing.*;
-import javax.swing.border.Border;
-import javax.swing.border.LineBorder;
+import javax.swing.plaf.FontUIResource;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.awt.*;
-import java.awt.Dialog;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.*;
 import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.sql.SQLException;
-import java.sql.Time;
 import java.util.*;
 import java.util.List;
 import java.util.Timer;
@@ -87,7 +62,7 @@ public class MainController implements Initializable {
     private static FileInputStream fileInput;
     private String filePath;
     private String extension;
-    List<String> faktury = listOfInvoices(Settings.getListOfInvoices());
+    List<String> faktury = listOfInvoices(Preferences.getPreferences().getInvoices());//(Settings.getListOfInvoices());
     List<String> faktury2;
     ObservableList<String> lista = FXCollections.observableArrayList();
     private ExecutorService executorService;
@@ -102,36 +77,77 @@ public class MainController implements Initializable {
     private Service<Void> background;
     InvoiceModel invoiceModel;
     CartModelEdi cartModelEdi;
+    CartModel cartModel;
     private Task task;
     List<RowModel> listOfFiles;
+    String listaNiezgodnosci = "";
     static List<String> kartList;
+    private int idUser;
     Alert alert;//=new ArrayList<>();
+    private String nrDok;
+    private int id_magazyn;
+    @FXML
+    private ComboBox combo;
 
+    @FXML
+    private TableView table;
 
-    private static String lastVisitedDirectory = System.getProperty("user.home");
+    @FXML
+    private MenuBar menuBar;
+
     @FXML
     private Menu menuDatabaseConnection;
-    @FXML
-    private ListView<String> listOfDocuments;
 
     @FXML
-    private MenuItem menuDatabaseSettings, menuOprogramie, menuTestConnection, menuClose;
+    private MenuItem menuDatabaseSettings;
+
     @FXML
-    MenuBar menuBar;
+    private MenuItem menuTestConnection;
+
     @FXML
-    private TextArea textArea, textArea2;
+    private MenuItem menuClose;
+
     @FXML
-    Label labelVersion;
+    private MenuItem menuOprogramie;
+
     @FXML
-    private Button loadButton, buttonImport, buttonRefresh, buttonConnect, b;
-    @FXML
-    CheckBox check;
-    @FXML
-    TableView table;
-    @FXML
-    private TextField textFileImport;
+    private Button buttonImport, buttonRefresh;
+    ;
+
     @FXML
     private ProgressBar progressBar;
+
+
+    @FXML
+    private Label labelUser, labelVersion;
+
+    private static String lastVisitedDirectory = System.getProperty("user.home");
+
+
+//    @FXML
+//    private TableView table;
+//    @FXML
+//    private ProgressBar progressBar;
+//    @FXML
+//    private Menu menuDatabaseConnection;
+////    @FXML
+////    private ListView<String> listOfDocuments;
+//
+//    @FXML
+//    private MenuItem menuDatabaseSettings, menuOprogramie, menuTestConnection, menuClose;
+//    @FXML
+//    MenuBar menuBar;
+//    @FXML
+//    ComboBox combo ;
+//    @FXML
+//   private TextArea  textArea2;
+//    @FXML
+//    Label labelVersion, labelUser;
+
+
+    @FXML
+    List<String> magazyny;
+
     final static String version = "1.0.0.1";
     final static Logger logger = Logger.getLogger(MainController.class);
 
@@ -142,18 +158,16 @@ public class MainController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-
+        Preferences.getPreferences();
         executorService = Executors.newSingleThreadExecutor();
-        textArea2.setEditable(false);
+        //textArea2.setEditable(false);
         menuTestConnection.setOnAction(e -> testConnection());
         menuOprogramie.setOnAction(e -> about());
         menuDatabaseSettings.setOnAction(e -> settingsOpen());
-        loadButton.setOnMouseClicked(e -> chooseFile());
         menuClose.setOnAction(e -> System.exit(0));
         buttonImport.setOnMouseClicked(e -> Start());//ImportKartotek());
         buttonRefresh.setOnMouseClicked(e -> Odswiez());
-        b.setOnMouseClicked(e -> ProgressIndicator());
-        listOfDocuments.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+        //  listOfDocuments.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         invoices = new ArrayList<String>();
         listOfXml = new ArrayList<>();
         listOfNumbers = new ArrayList<>();
@@ -166,18 +180,31 @@ public class MainController implements Initializable {
 
 
         labelVersion.setText("ver. " + version);
+        labelUser.setText(LoginController.uzytkownik);
+
+        magazyny = new ArrayList<>();
+        try {
+            documentInvoiceDao = new DocumentInvoiceDaoImpl();
+            magazyny = documentInvoiceDao.getMagazyn();
+            ObservableList<String> lista = FXCollections.observableArrayList(magazyny);
+
+            combo.getItems().addAll(lista);
+            combo.setValue(lista.get(0));
+        } catch (Exception ex) {
+            logger.debug(ex.fillInStackTrace());
+        }
         // listOfDocuments.set
-        listOfDocuments.setOnKeyPressed(e -> {
-            if (e.getCode() == KeyCode.SHIFT) {
-                listOfDocuments.getSelectionModel().selectAll();
-                if (faktury.size() > 0) {
-                    for (int i = 0; i < faktury.size(); i++) {
-                        //String item = "Item "+i ;
-                        //
-                    }
-                }
-            }
-        });
+//        listOfDocuments.setOnKeyPressed(e -> {
+//            if (e.getCode() == KeyCode.SHIFT) {
+//                listOfDocuments.getSelectionModel().selectAll();
+//                if (faktury.size() > 0) {
+//                    for (int i = 0; i < faktury.size(); i++) {
+//                        //String item = "Item "+i ;
+//                        //
+//                    }
+//                }
+//            }
+//        });
 //        check.selectedProperty().addListener(new ChangeListener<Boolean>() {
 //            @Override
 //            public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
@@ -189,7 +216,7 @@ public class MainController implements Initializable {
         //     JOptionPane.showMessageDialog(null, invoices.get(0));
 
         Odswiez();
-        FillTable();
+        //FillTable();
         //   JOptionPane.showMessageDialog(null, faktury.size());
 //        for (String faktura : faktury) {
 //            faktury.set(faktury.indexOf(faktura), faktura + " - " + listOfXml.get(faktury.indexOf(faktura)).getHeaderModel().getInvoiceNumber());
@@ -198,8 +225,30 @@ public class MainController implements Initializable {
 
     }
 
+    private void ListaBledow() {
+        TextArea textArea = new TextArea(listaNiezgodnosci);
+        textArea.setEditable(false);
+        textArea.setWrapText(true);
+        GridPane gridPane = new GridPane();
+        gridPane.setMaxWidth(Double.MAX_VALUE);
+        gridPane.add(textArea, 0, 0);
+
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+         Stage stage = (Stage) alert.getDialogPane().getScene().getWindow();
+
+// Add a custom icon.
+        stage.getIcons().add(new Image(getClass().getClassLoader().getResourceAsStream("logo.png")));
+        alert.setTitle("Import Faktur");
+        alert.setHeaderText("\n\nZostały utworzone nowe kartoteki.\n\nProszę uzupełnić dane w podanych indeksach takie jak :" +
+                "\n- ceny\n- cechy\n- grupy kartotekowe\netc.");
+        alert.getDialogPane().setContent(gridPane);
+        alert.showAndWait();
+
+
+    }
 
     private void FillTable() {
+        table.getColumns().clear();
         List<RowModel> rowModels = LoadingFiles(faktury);
         TableColumn col1 = new TableColumn("V");
         TableColumn col2 = new TableColumn("Nazwa pliku XML");
@@ -213,13 +262,13 @@ public class MainController implements Initializable {
 
         table.getColumns().addAll(col1, col2, col3);
 
+
+        col1.setCellValueFactory(new PropertyValueFactory<RowModel, Boolean>("select"));
+        col2.setCellValueFactory(new PropertyValueFactory<RowModel, String>("xmlName"));
+        col3.setCellValueFactory(new PropertyValueFactory<RowModel, String>("invoiceNumber"));
         final ObservableList<RowModel> observableList = FXCollections.observableArrayList(
                 rowModels
         );
-
-        col1.setCellValueFactory(new PropertyValueFactory<RowModel, String>("select"));
-        col2.setCellValueFactory(new PropertyValueFactory<RowModel, String>("xmlName"));
-        col3.setCellValueFactory(new PropertyValueFactory<RowModel, String>("invoiceNumber"));
         table.setItems(observableList);
         table.setPlaceholder(new Label("Nie załadowano żadnego pliku"));
 
@@ -232,7 +281,7 @@ public class MainController implements Initializable {
         try {
             for (String file : files) {
                 DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();
-                Document doc = docBuilder.parse(Settings.getListOfInvoices() + file);
+                Document doc = docBuilder.parse(Preferences.getPreferences().getInvoices() + file);
 
                 doc.getDocumentElement().normalize();
 
@@ -243,7 +292,10 @@ public class MainController implements Initializable {
                 NodeList invoiceNumbers = number.getChildNodes();
                 String num = ((Node) invoiceNumbers.item(0)).getNodeValue().trim();
                 //    JOptionPane.showMessageDialog(null,num);
+                boolean set = false;
                 rowModel = new RowModel(file, num);
+                //       rowModel.setSelect(new CheckBox());
+                //     JOptionPane.showMessageDialog(null, rowModel.toString());
                 listOfFiles.add(rowModel);
                 // Collections.sort(listOfFiles);
             }
@@ -255,9 +307,9 @@ public class MainController implements Initializable {
 
     }
 
-    private void Start1() {
-        JaxB.jaxbXMLToDocumentInvoiceModelObject(textFileImport.getText());
-    }
+//    private void Start1() {
+//        JaxB.jaxbXMLToDocumentInvoiceModelObject(textFileImport.getText());
+//    }
 
     private void Start() {
         Job();
@@ -266,14 +318,42 @@ public class MainController implements Initializable {
 
     }
 
+
     private boolean Job() {
+        documentInvoiceDao = new DocumentInvoiceDaoImpl();
+        String nrDok = "";
+        int idNagl = 0;
+        int idUser = 0;
         progressBar.setProgress(0.0d);
         buttonImport.setDisable(true);
-        loadButton.setDisable(true);
         Timer timer = new Timer();
         TimerTask timerTask = new TimerTask() {
             @Override
             public void run() {
+
+                try {
+                    // for (String file : fileToMove) {
+
+
+                    //  JOptionPane.showMessageDialog(null, listOfDocumentsToConnect.get(0));
+                    // for(InvoiceModel model:listOfDocumentsToConnect){
+                    //        JOptionPane.showMessageDialog(null, "ok");
+                    //  }
+
+                    //   idNagl=documentInvoiceDao.GetIdNagl()
+                    //   documentInvoiceDao.UpdateNaglUzytkownik()
+                } catch (Exception ex) {
+                    logger.debug(ex.fillInStackTrace());
+                }
+                JOptionPane.showMessageDialog(null, "Zakończono import plików !", "Import EDI RAJMAN", JOptionPane.INFORMATION_MESSAGE);
+
+                MoveImportedFile(fileToMove);
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                //  MoveImportedFile(fileToMove);
                 //     JOptionPane.showConfirmDialog(null,listOfDocumentsToConnect.get(0));
 //                if (PowiazPz(listOfDocumentsToConnect)) {
 //                    JOptionPane.showMessageDialog(null, "Zakończono import plików !", "Import EDI INTER-ELEKTRO", JOptionPane.INFORMATION_MESSAGE);
@@ -281,6 +361,9 @@ public class MainController implements Initializable {
 //
 //                }
                 Platform.runLater(() -> Odswiez());
+                if (listaNiezgodnosci.length() > 0) {
+                    Platform.runLater(() -> ListaBledow());
+                }
             }
         };
 
@@ -289,7 +372,16 @@ public class MainController implements Initializable {
             public void run() {
                 //   Odswiez();
                 if (wypychacz()) {
-                    timer.schedule(timerTask, 8000l);
+
+                    //   nowa wersja z watkiem
+                    try {
+                        Thread.sleep(8000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    JOptionPane.showMessageDialog(null, "Zakończono import plików !", "Import EDI RAJMAN", JOptionPane.INFORMATION_MESSAGE);
+
+                    Platform.runLater(() -> End());
                 }
 
             }
@@ -298,9 +390,15 @@ public class MainController implements Initializable {
         task = new Task<Void>() {
             @Override
             public Void call() {
-                Run();
-                task.cancel();
-                Platform.runLater(runnable1);
+                if (Run()) {
+                    task.cancel();
+                    if (task.isDone()) {
+                        Platform.runLater(runnable1);
+                        return null;
+                    }
+                }
+                ;
+
                 return null;
             }
 
@@ -313,7 +411,61 @@ public class MainController implements Initializable {
     }
 
     ///  1  /////////////
+    private void End() {
+        MoveImportedFile(fileToMove);
+        Odswiez();
+        if (listaNiezgodnosci.length() > 0) {
+            ListaBledow();
+        }
+    }
+
+    private int GetMagazyn() {
+        int id_magazyn = 0;
+        JFrame frame = new JFrame("Import faktur...");
+        java.net.URL imgURL3 = getClass().getClassLoader().getResource("logo.png");
+        ImageIcon icon3 = new ImageIcon(imgURL3);
+        frame.setLocationByPlatform(true);
+        frame.setIconImage(icon3.getImage());
+        frame.setUndecorated(true);
+        frame.setVisible(true);
+        frame.setLocationRelativeTo(null);
+        List<String> magazyny = new ArrayList<>();
+        try {
+            magazyny = documentInvoiceDao.getMagazyn();
+        } catch (Exception ex) {
+            logger.debug(ex.fillInStackTrace());
+        }
+        if (magazyny.size() > 0) {
+            String[] mag = magazyny.stream().toArray(String[]::new);
+            JComboBox jcd = new JComboBox(mag);
+            jcd.setEditable(false);
+
+            Object[] options = new Object[]{};
+            JOptionPane jop = new JOptionPane("Wybierz magazyn na który ma być przyjęty towar z faktury",
+                    JOptionPane.QUESTION_MESSAGE,
+                    JOptionPane.DEFAULT_OPTION,
+                    null, options, null);
+
+            //add combos to JOptionPane
+            jop.add(jcd);
+
+
+            //create a JDialog and add JOptionPane to it
+            JDialog diag = new JDialog();
+            diag.getContentPane().add(jop);
+            diag.pack();
+            diag.setVisible(true);
+
+        } else {
+            logger.debug("Nie udało się pobrać listy magazynów");
+        }
+
+
+        return id_magazyn;
+    }
+
     private boolean Run() {
+        DocumentInvoiceDao dao;
         try {
             ObservableList<RowModel> dataList = FXCollections.observableArrayList();
             for (RowModel bean : listOfFiles) {
@@ -322,14 +474,34 @@ public class MainController implements Initializable {
                 }
             }
             //   JOptionPane.showMessageDialog(null, invoices);
-            listOfXml = LoadXml(invoices);
-            listOfDocumentsToConnect = new ArrayList<>();
-            listOfDocumentsToConnect = ImportPlikow(listOfXml);
+            //  JOptionPane.showMessageDialog(null, combo.getValue().toString());
+
+            if ((!combo.getValue().equals("")) && (!combo.getSelectionModel().isEmpty())) {
+                dao = new DocumentInvoiceDaoImpl();
+               String mag = combo.getValue().toString();
+                try {
+                    dao.UpdateUrzzew(Preferences.getPreferences().getKodUrzZew(), mag);
+                    Thread.sleep(500);
+                  //  JOptionPane.showMessageDialog(null, mag);
+
+
+
+                } catch (Exception ex) {
+                    logger.debug(ex.fillInStackTrace());
+                }
+                listOfXml = LoadXml(invoices);
+                ImportPlikow(listOfXml, combo.getValue().toString());
+            } else if (combo.getValue() == null) {
+                JOptionPane.showMessageDialog(null, "Wybierz magazyn !", "Import faktur", JOptionPane.ERROR_MESSAGE);
+            }
+
+
             return true;
         } catch (Exception ex) {
             logger.debug(ex.fillInStackTrace());
-            return false;
+
         }
+        return false;
     }
 
 //    private boolean Import(List<DocumentInvoiceModel> listOfDocumentInvoiceModels) {
@@ -349,7 +521,10 @@ public class MainController implements Initializable {
 //    }
 
     // Import Plików
-    private List<InvoiceModel> ImportPlikow(List<DocumentInvoiceModel> listOfDocumentInvoiceModels2) {
+    private List<InvoiceModel> ImportPlikow(List<DocumentInvoiceModel> listOfDocumentInvoiceModels2, String magazyn) {
+
+        Preferences.getPreferences().setMagazyn(magazyn);
+
         fileToMove = new ArrayList<>();
         documentInvoiceDao = new DocumentInvoiceDaoImpl();
         List<InvoiceModel> modelList = new ArrayList<>();
@@ -359,7 +534,8 @@ public class MainController implements Initializable {
                 // JOptionPane.showMessageDialog(null, invoices.get(0));
                 String fileName = invoices.get(listOfDocumentInvoiceModels2.indexOf(documentInvoiceModel));
                 InvoiceModel invoiceModel2;// = new InvoiceModel();
-                CartModelEdi cartModelEdi; //= new CartModelEdi();
+                CartModelEdi cartModelEdi;
+                CartModel cartModel;//= new CartModelEdi();
                 String nip1 = documentInvoiceModel.getInvoicePartiesModel().getSellerModel().getCompanyModel().getTaxID();
                 String poNip = (nip1.replace("PL", "")).replace("-", "");
                 String iln1 = documentInvoiceModel.getInvoicePartiesModel().getSellerModel().getCompanyModel().getILN();
@@ -375,14 +551,17 @@ public class MainController implements Initializable {
                 if (exist) {
                     JOptionPane.showMessageDialog(null, "Dokument o numerze: " + invoiceNumber + " był już importowany !\nPlik : " + fileName, "Błąd importu", JOptionPane.ERROR_MESSAGE);
                     logger.debug("Dokument o numerze: " + invoiceNumber + " był już importowany");
-                    //  Odswiez();
-                    continue;
+                   // Odswiez();
+                    break;
+
 
                 } else if (!exist) {
                     if (exist2) {
                         JOptionPane.showMessageDialog(null, "Dokument o numerze: " + invoiceNumber + " był już importowany !\nPlik : " + fileName, "Błąd importu", JOptionPane.ERROR_MESSAGE);
                         logger.debug("Dokument o numerze: " + invoiceNumber + " był już importowany");
-                        continue;
+                        //Odswiez();
+                        break;
+
                     }
                 }
                 try {
@@ -415,13 +594,26 @@ public class MainController implements Initializable {
                 double counter = 0.0;
                 double progress = (1d / lines);
                 for (LineModel line : documentInvoiceModel.getLinesModel().getInvoiceLines()) {
+
+
                     String kart_indeks = "";
 
                     cartModelEdi = new CartModelEdi();
+                    cartModel = new CartModel();
                     cartModelEdi.setEan(line.getDetailModel().getEan());
+                    cartModel.setKodEanDomyslny(line.getDetailModel().getEan());
                     cartModelEdi.setNetPice(line.getDetailModel().getUnitPrice());
-                    cartModelEdi.setQuantity(line.getDetailModel().getQuantity());
+                    cartModel.setOstatniaCena(line.getDetailModel().getUnitPrice());
                     cartModelEdi.setKartName(line.getDetailModel().getDescription());
+                    cartModel.setNazwaSystemowa(line.getDetailModel().getDescription());
+                    cartModelEdi.setQuantity(line.getDetailModel().getQuantity());
+                    cartModel.setJednostka(line.getDetailModel().getUnitOfMeasure());
+                    cartModelEdi.setUnit(line.getDetailModel().getUnitOfMeasure());
+                    cartModel.setVat(line.getDetailModel().getTaxSymbol());
+                    cartModelEdi.setTax(line.getDetailModel().getTaxSymbol());
+
+                    // cartModelEdi.setIndeks();
+
 
                     //    String zamdost = line.getLineOrderModel().getBuyerOrderNumber();
                     // String poZamdost = zamdost.replace("ZAMDOST ", "");
@@ -431,25 +623,38 @@ public class MainController implements Initializable {
 //                } else {
 //                    cartModelEdi.setNetPice(line.getLineItemModel().getProductFeeDetailsModel().getUnitNetPriceWithoutFee());
 //                }
-                    String ean = line.getDetailModel().getEan();
-                    String supplierCode = line.getDetailModel().getSupplierItemCode();
-                    kart_indeks = documentInvoiceDao.GetKartIndeksByEan(ean);
+                    String eanX = line.getDetailModel().getEan();
+                    String supplierCodeX = line.getDetailModel().getSupplierItemCode();
+                    cartModel.setIndeks(supplierCodeX);
+                    kart_indeks = documentInvoiceDao.GetKartIndeksByEan(eanX);
                     if ((kart_indeks != null) && (!kart_indeks.isEmpty())) {
                         cartModelEdi.setIndeks(kart_indeks);
-                        logger.debug("Dodano kartotekę " + kart_indeks + " na podstawie kodu EAN : " + ean);
+                        //  cartModel.setIndeks(kart_indeks);
+                        logger.debug("Dodano kartotekę " + kart_indeks + " na podstawie kodu EAN : " + eanX);
                     }
                     if ((kart_indeks == null) || kart_indeks.isEmpty()) {
-                        kart_indeks = documentInvoiceDao.GetKartIndeksBySupplierCode(supplierCode);
+                        kart_indeks = documentInvoiceDao.GetKartIndeksBySupplierCode(supplierCodeX);
+
                     }
                     if ((kart_indeks != null) && (!kart_indeks.isEmpty())) {
                         cartModelEdi.setIndeks(kart_indeks);
-                        logger.debug("Dodano kartotekę " + kart_indeks + " na podstawie KODU PRODUCENTA : " + supplierCode);
-                        JOptionPane.showMessageDialog(null, "KODO");
+                        //    cartModel.setIndeks(kart_indeks);
+                        logger.debug("Dodano kartotekę " + kart_indeks + "\nna podstawie numeru EAN lub kodu producenta : " + supplierCodeX);
+
                     }
 
                     if ((kart_indeks == null) || kart_indeks.isEmpty()) {
-                        logger.debug("Nie odnaleziono kartoteki na podstawie KODU PRODUCENTA : " + supplierCode);
-                        JOptionPane.showMessageDialog(null, "Nie odnaleziono kartoteki na podstawie nr KODU TOWAROWEGO SPRZEDAWCY\nWybierz właściwą kartotekę...\"", "Błąd importu pliku ", JOptionPane.ERROR_MESSAGE);
+
+                        JFrame frame1 = new JFrame("Wybierz właściwą kartotekę...");
+                        java.net.URL imgURL2 = getClass().getClassLoader().getResource("logo.png");
+                        ImageIcon icon2 = new ImageIcon(imgURL2);
+                        frame1.setLocationByPlatform(true);
+                        frame1.setIconImage(icon2.getImage());
+                        frame1.setUndecorated(true);
+                        frame1.setVisible(true);
+                        frame1.setLocationRelativeTo(null);
+                        logger.debug("Nie odnaleziono kartoteki\n" + line.getDetailModel().getDescription() + "\nna podstawie numer EAN ani kodu producenta : " + supplierCodeX);
+                        JOptionPane.showMessageDialog(frame1, "Nie odnaleziono kartoteki\n" + line.getDetailModel().getDescription() + "\nna podstawie numeru EAN ani kodu producenta.\nWybierz właściwą kartotekę . . .", "Błąd importu pliku", JOptionPane.ERROR_MESSAGE);
 //                                JFrame frame = new JFrame("Import faktur...");
 //                                java.net.URL imgURL = getClass().getClassLoader().getResource("logo.png");
 //                                ImageIcon icon = new ImageIcon(imgURL);
@@ -497,55 +702,196 @@ public class MainController implements Initializable {
                             }
                             // Object[] listArray=(String[])kartList.toArray();
                             String[] listArray = kartList.stream().toArray(String[]::new);
-                            JFrame frame = new JFrame("Import faktur...");
-                            java.net.URL imgURL = getClass().getClassLoader().getResource("logo.png");
-                            ImageIcon icon = new ImageIcon(imgURL);
-                            frame.setIconImage(icon.getImage());
-                            frame.setUndecorated(true);
-                            frame.setVisible(true);
-                            frame.setLocationRelativeTo(null);
+//                            JFrame frame = new JFrame("Import faktur...1");
+//                            java.net.URL imgURL = getClass().getClassLoader().getResource("logo.png");
+//                            ImageIcon icon = new ImageIcon(imgURL);
+//                            frame.setIconImage(icon.getImage());
+//                            frame.setUndecorated(true);
+//                            frame.setVisible(true);
+//                            frame.setLocationRelativeTo(null);
 
                             JFrame frame2 = new JFrame("Import faktur...");
-                            ImageIcon icon2 = new ImageIcon(imgURL);
-                            frame2.setIconImage(icon2.getImage());
+                            java.net.URL imgURL = getClass().getClassLoader().getResource("logo.png");
+                            ImageIcon icon = new ImageIcon(imgURL);
+                            frame2.setLocationByPlatform(true);
+                            frame2.setIconImage(icon.getImage());
                             frame2.setUndecorated(true);
                             frame2.setVisible(true);
                             frame2.setLocationRelativeTo(null);
                             final JComboBox<String> combo = new JComboBox<>(listArray);
 
-                            String[] options = {"OK", "Anuluj", "Wyszukaj ręcznie . . ."};
+                            String[] options = {"      OK      ", "      Anuluj      ", "           Wyszukaj ręcznie             ", "           Dodaj nową kartotekę . . .        "};
 
-                            String title = "Wybierz kartotekę...";
+                            String title = "Wybór kartoteki : " + cartModelEdi.getKartName();
                             int selection = JOptionPane.showOptionDialog(frame2, combo, title,
                                     JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE, null,
+
                                     options, options[0]);
                             // frame2.dispose();
+                            if (selection == 3) {
 
+                                JOptionPane.showMessageDialog(null, "Zostanie utworzona nowa kartoteka na podstawie danych z faktury. . .", "Dodawanie kartotek", JOptionPane.PLAIN_MESSAGE);
+                                //  JOptionPane.showMessageDialog(null,line.getDetailModel().getSupplierItemCode());
+                                cartModelEdi.setIndeks(line.getDetailModel().getSupplierItemCode());
+                                String nazwaskr = "";
+                                if (cartModelEdi.getKartName().length() > 34) {
+                                    nazwaskr = line.getDetailModel().getDescription().substring(0, 34);
+                                } else {
+                                    nazwaskr = cartModelEdi.getKartName();
+                                }
+                                cartModel.setIdentyfikator(nazwaskr);
+
+
+//                                String s = (String) JOptionPane.showInputDialog(
+//                                        frame2,
+//                                        "Wyszukaj kartotekę\n" + cartModelEdi.getKartName() + "\nna podstawie indeksu : ",
+//                                        "Kartoteka : "+cartModelEdi.getKartName(),
+//                                        JOptionPane.QUESTION_MESSAGE);
+//                                try {
+//                                    String kartIndeks = documentInvoiceDao.GetKartIndeksByIndeks(s);
+//                                    try {
+//                                        Thread.sleep(100);
+//                                    } catch (InterruptedException e) {
+//                                        e.printStackTrace();
+//                                    }
+//                                    if ((kartIndeks != null) && (!kartIndeks.isEmpty())) {
+//                                        cartModelEdi.setIndeks(kartIndeks);
+//                                        logger.debug("Dodano kartotekę " + kartIndeks);
+//                                        JOptionPane.showMessageDialog(null, "Dodano kartotekę o indeksie : " + cartModelEdi.getIndeks(), "Wybór ręczny", JOptionPane.INFORMATION_MESSAGE);
+//                                        frame2.dispose();
+//                                    }
+                                Object[] option = {"Zapisz ",
+                                        "Anuluj"};
+                                UIManager.put("OptionPane.buttonFont", new FontUIResource(new Font("ARIAL", Font.PLAIN, 12)));
+                                //  UIManager.put("OptionPane.background",new ColorUIResource(255,0,0));
+                                int ok = JOptionPane.showOptionDialog(frame2,
+                                        cartModelEdi.toString(),
+                                        cartModelEdi.getKartName(),
+                                        JOptionPane.YES_NO_OPTION,
+                                        JOptionPane.QUESTION_MESSAGE,
+                                        null,
+                                        option,
+                                        option[0]);
+
+                                frame2.dispose();
+                                if (ok == 0) {
+                                    try {
+                                        //   JOptionPane.showMessageDialog(null,cartModel.toString());
+                                        String Ean = documentInvoiceDao.NewKart(cartModel, 1);
+                                        JOptionPane.showMessageDialog(frame2,
+                                                "Dodano nową kartotekę :  " + cartModelEdi.getKartName(),
+                                                "Nowa kartoteka", JOptionPane.QUESTION_MESSAGE);
+                                        listaNiezgodnosci += "\nKartoteka : " + cartModelEdi.getKartName() + ", EAN : " + cartModelEdi.getEan() + "\n";
+
+                                    } catch (Exception ex3) {
+                                        logger.debug(ex3.getStackTrace());
+                                    }
+                                    frame2.dispose();
+                                }
+                                if (ok == 1) {
+                                    try {
+                                        frame2.dispose();
+                                        break;
+
+
+                                    } catch (Exception ex3) {
+                                        logger.debug(ex3.getStackTrace());
+                                    }
+                                    frame2.dispose();
+                                }
+                            }
                             if (selection == 2) {
                                 String s = (String) JOptionPane.showInputDialog(
                                         frame2,
-                                        "Wyszukaj kartotekę " + cartModelEdi.getKartName() + "\nna podstawie indeksu : ",
+                                        "Wyszukaj kartotekę\n" + cartModelEdi.getKartName() + "\nna podstawie indeksu : ",
+                                        "Wprowadź indeks kartoteki",
+                                        JOptionPane.QUESTION_MESSAGE);
+                                if (s == null || (s != null && ("".equals(s)))) {
+                                    JOptionPane.showMessageDialog(frame2, "Import został przerwany", "Wprowadź indeks kartoteki", JOptionPane.ERROR_MESSAGE);
+                                    Odswiez();
+                                    break;
+                                }
+//                                while((s.isEmpty())||(s.equals(""))||(s==null)){
+//                                     s = (String) JOptionPane.showInputDialog(
+//                                            frame2,
+//                                            "Wyszukaj kartotekę\n" + cartModelEdi.getKartName() + "\nna podstawie indeksu : ",
+//                                            "Wprowadź indeks kartoteki",
+//                                            JOptionPane.QUESTION_MESSAGE);
+//                                }
+                                if ((!s.equals("")) && (!s.isEmpty()) && (s != null)) {
+                                    try {
+                                        String kartIndeks = documentInvoiceDao.GetKartIndeksByIndeks(s);
+                                        try {
+                                            Thread.sleep(100);
+                                        } catch (InterruptedException e) {
+                                            e.printStackTrace();
+                                        }
+
+                                        if ((kartIndeks != null) && (!kartIndeks.isEmpty())) {
+                                            cartModelEdi.setIndeks(kartIndeks);
+                                            logger.debug("Dodano kartotekę " + kartIndeks);
+                                            JOptionPane.showMessageDialog(null, "Dodano kartotekę o indeksie : " + cartModelEdi.getIndeks(), "Wybór ręczny", JOptionPane.INFORMATION_MESSAGE);
+
+                                            //   try {
+//                                            int idKart = documentInvoiceDao.GetKartIdByIndeks(kartIndeks);
+//                                            Thread.sleep(100);
+//                                            documentInvoiceDao.UpdateSupplierNumber(idKart, supplierCodeX);
+//                                            documentInvoiceDao.UpdateEan(idKart, eanX);
+//                                        } catch (Exception ex) {
+//                                            logger.debug(ex.fillInStackTrace());
+//                                            System.out.println(ex.fillInStackTrace());
+//                                        }
+                                        }
+                                        //  JOptionPane.showMessageDialog(null, s);
+                                    } catch (Exception ex3) {
+                                        logger.debug(ex3.getStackTrace());
+                                    }
+                                }
+                                frame2.dispose();
+                            }
+
+                            if (selection == 1) {
+
+//                                Platform.runLater(() -> {
+//                                    Alert alert = new Alert(Alert.AlertType.ERROR);
+//                                    alert.setTitle("title");
+//                                    alert.showAndWait();
+//                                });
+//
+
+                                JOptionPane.showMessageDialog(null, "Nie wybrano kartoteki !\nWyszukaj kartotekę na podstawie indeksu. . .");
+
+
+                                String s = (String) JOptionPane.showInputDialog(
+                                        frame2,
+                                        "Wyszukaj kartotekę\n" + cartModelEdi.getKartName() + "\nna podstawie indeksu : ",
                                         "Wprowadź indeks kartoteki",
                                         JOptionPane.QUESTION_MESSAGE);
                                 try {
                                     String kartIndeks = documentInvoiceDao.GetKartIndeksByIndeks(s);
                                     try {
-                                        Thread.sleep(50);
+                                        Thread.sleep(100);
                                     } catch (InterruptedException e) {
                                         e.printStackTrace();
                                     }
-                                    if ((kart_indeks != null) && (!kart_indeks.isEmpty())) {
-                                        cartModelEdi.setIndeks(kart_indeks);
-                                        logger.debug("Dodano kartotekę " + kart_indeks);
+                                    if ((kartIndeks != null) && (!kartIndeks.isEmpty())) {
+                                        cartModelEdi.setIndeks(kartIndeks);
+                                        logger.debug("Dodano kartotekę " + kartIndeks);
+//                                        try {
+//                                            int idKart = documentInvoiceDao.GetKartIdByIndeks(kartIndeks);
+//                                            Thread.sleep(100);
+//                                            documentInvoiceDao.UpdateSupplierNumber(idKart, supplierCodeX);
+//                                            documentInvoiceDao.UpdateEan(idKart, eanX);
+//                                        } catch (Exception ex) {
+//                                            logger.debug(ex.fillInStackTrace());
+//                                            System.out.println(ex.fillInStackTrace());
+//                                        }
                                         JOptionPane.showMessageDialog(null, "Dodano kartotekę o indeksie : " + cartModelEdi.getIndeks(), "Wybór ręczny", JOptionPane.INFORMATION_MESSAGE);
+                                        frame2.dispose();
                                     }
                                 } catch (Exception ex3) {
                                     logger.debug(ex3.getStackTrace());
                                 }
-                                frame2.dispose();
-                            }
-                            if (selection == 1) {
-                                JOptionPane.showMessageDialog(null, "Nie wybrano kartoteki !");
                                 frame2.dispose();
                             }
 
@@ -553,9 +899,18 @@ public class MainController implements Initializable {
                                 try {
                                     String longName = combo.getSelectedItem().toString();
                                     String kartIndeks = documentInvoiceDao.GetKartIndeksByName(longName);
-                                    Thread.sleep(50);
-                                    if ((kart_indeks != null) && (!kart_indeks.isEmpty())) {
-                                        cartModelEdi.setIndeks(kart_indeks);
+                                    //   JOptionPane.showMessageDialog(null, kartIndeks);
+                                    Thread.sleep(100);
+                                    if ((kartIndeks != null) && (!kartIndeks.isEmpty())) {
+                                        cartModelEdi.setIndeks(kartIndeks);
+//                                        int idKart = documentInvoiceDao.GetKartIdByIndeks(kartIndeks);
+//                                        Thread.sleep(100);
+//                                        if (idKart > 0) {
+//                                            //   JOptionPane.showMessageDialog(null, idKart + ", " + eanX + ", " + supplierCodeX);
+//                                            documentInvoiceDao.UpdateEan(idKart, eanX);
+//                                            documentInvoiceDao.UpdateSupplierNumber(idKart, supplierCodeX);
+//                                        }
+
                                         logger.debug("Dodano kartotekę " + kart_indeks);
                                         JOptionPane.showMessageDialog(null, "Dodano kartotekę o indeksie : " + cartModelEdi.getIndeks(), "Lista wyboru", JOptionPane.INFORMATION_MESSAGE);
                                     }
@@ -570,7 +925,10 @@ public class MainController implements Initializable {
                         } catch (Exception ex2) {
                             logger.debug(ex2.getStackTrace());
                         }
+
+                        frame1.dispose();
                     }
+
 
                     //ostatni if
 
@@ -590,8 +948,64 @@ public class MainController implements Initializable {
 //                        } catch (IOException e) {
 //                            e.printStackTrace();
 //                        }
-//                    });
+//                    }
+                    int idKart = 0;
+                    if ((!cartModelEdi.getIndeks().isEmpty()) && (cartModelEdi.getIndeks() != null)) {
+                        try {
+                            String indeks = cartModelEdi.getIndeks();
+                            idKart = documentInvoiceDao.GetKartIdByIndeks(indeks);
+                            Thread.sleep(100);
+                            //  JOptionPane.showMessageDialog(null, idKart);
+                            documentInvoiceDao.UpdateSupplierNumber(idKart, supplierCodeX);
+                            documentInvoiceDao.UpdateEan(idKart, eanX);
+
+                        } catch (Exception ex) {
+                            logger.debug(ex.getStackTrace());
+                        }
+                    }
+                    if (idKart != 0) {
+                        // JOptionPane.showMessageDialog(null, idKart);
+                        JFrame frame2 = new JFrame("Przelicz jednostkę miary...");
+                        java.net.URL imgURL = getClass().getClassLoader().getResource("logo.png");
+                        ImageIcon icon = new ImageIcon(imgURL);
+                        frame2.setLocationByPlatform(true);
+                        frame2.setIconImage(icon.getImage());
+                        frame2.setUndecorated(true);
+                        frame2.setVisible(true);
+                        frame2.setLocationRelativeTo(null);
+                        try {
+                            String unit1 = line.getDetailModel().getUnitOfMeasure();
+                            String ilosc = line.getDetailModel().getQuantity();
+                            Double il = Double.valueOf(ilosc);
+                            String iloscX = String.format("%.2f", il);
+                            String kartoteka = cartModelEdi.getKartName();
+                            String unit2 = documentInvoiceDao.UnitOfMeasure(idKart);
+                            String unit1X = unit1.replace(".", "").replace(" ", "");
+                            String unit2X = unit2.replace(".", "").replace(" ", "");
+                            //  JOptionPane.showMessageDialog(frame2, unit1X + " : " + unit2X);
+                            if (!(unit1X.toUpperCase().equals(unit2X.toUpperCase()))) {
+                                String s = (String) JOptionPane.showInputDialog(
+                                        frame2,
+                                        cartModelEdi.getKartName() + "\n\nJednostka miary z dokumentu : " + unit1 + ", ilość : " + iloscX + "            \n\nJednostka miary z kartoteki : " + unit2 + "            .\n\nPrzelicz " + unit2 + " na " + unit1 + " i wprowadź poprawną ilość w " + unit1 + "             .",
+                                        "Przelicz jednostkę miary :  ",
+                                        JOptionPane.QUESTION_MESSAGE);
+                                if ((s.isEmpty() && (s.equals("")))) {
+                                    String jm = s.replace(",", ".").replace(" ", "");
+                                    cartModelEdi.setQuantity(jm);
+                                }
+                            }
+
+                            frame2.dispose();
+                            // frame1.dispose();
+                        } catch (Exception ex) {
+                            logger.debug(ex.fillInStackTrace());
+                            frame2.dispose();
+                            // frame1.dispose();
+                        }
+                    }
                     list.add(cartModelEdi);
+
+                    // JOptionPane.showMessageDialog(null, fileToMove.toString());
                     counter += progress;
                     progressBar.setProgress(counter);
                 }
@@ -612,12 +1026,13 @@ public class MainController implements Initializable {
                     //   JOptionPane.showMessageDialog(null,"URZZEWNAGL :"+urzzew_nagl);
                     for (CartModelEdi cartModelEdi1 : invoiceModel2.getPozycje()) {
                         try {
+                            //    JOptionPane.showMessageDialog(null, cartModelEdi1.toString());
                             documentInvoiceDao.ImportPzPoz(invoiceModel2, cartModelEdi1, urzzew_nagl);
                             // Thread.sleep();
                         } catch (Exception ex) {
                             JOptionPane.showMessageDialog(null, "Błąd importu pozycji dokumentu : " + fileName, "Błąd importu 1", JOptionPane.ERROR_MESSAGE);
                             buttonImport.setDisable(false);
-                            buttonConnect.setDisable(false);
+                            //     buttonConnect.setDisable(false);
                         }
                     }
 
@@ -645,7 +1060,10 @@ public class MainController implements Initializable {
 
 
                 modelList.add(invoiceModel2);
+                //   JOptionPane.showMessageDialog(null, fileName);
+
                 fileToMove.add(fileName);
+                //    JOptionPane.showMessageDialog(null, fileToMove.toString());
                 // return invoiceModel2;
             }
         } catch (
@@ -656,6 +1074,8 @@ public class MainController implements Initializable {
             logger.debug(ex.getMessage());
             return null;
         }
+
+
         return modelList;
     }
 
@@ -682,7 +1102,7 @@ public class MainController implements Initializable {
         primaryStage.getIcons().add(new Image(getClass().getClassLoader().getResourceAsStream("logo.png")));//("file:logo.png"));
         primaryStage.setResizable(false);
         primaryStage.initStyle(StageStyle.DECORATED);
-        Scene scene = new Scene(root, 820, 570);
+        Scene scene = new Scene(root, 820, 585);
         scene.getStylesheets().add(getClass().getClassLoader().getResource("style.css").toExternalForm());
         //scene.setUserAgentStylesheet(STY);
         primaryStage.setScene(scene);
@@ -752,7 +1172,7 @@ public class MainController implements Initializable {
         commands.add("/RUN");
         commands.add("/TN");
         commands.add("\"URZZEW_REALIZ_PSB\"");
-        commands.add(Settings.getSystem());
+        //   commands.add(Settings.getSystem());
 
         ProcessBuilder builder = new ProcessBuilder(commands);
         try {
@@ -785,12 +1205,15 @@ public class MainController implements Initializable {
 
             try {
                 //   JOptionPane.showMessageDialog(null, file);
-                File afile = new File(Settings.getListOfInvoices() + file);
-                File bfile = new File(Settings.getListOfInvoices() + "DONE\\" + file);
-
+                File afile = new File(Preferences.getPreferences().getInvoices() + file);
+                File bfile = new File(Preferences.getPreferences().getInvoices() + "DONE\\" + file);
+//JOptionPane.showMessageDialog(null, bfile);
                 inStream = new FileInputStream(afile);
+                //  JOptionPane.showMessageDialog(null, afile);
+                Thread.sleep(100);
                 outStream = new FileOutputStream(bfile);
-
+                Thread.sleep(100);
+                //  JOptionPane.showMessageDialog(null, bfile);
                 byte[] buffer = new byte[1024];
 
                 int length;
@@ -800,14 +1223,18 @@ public class MainController implements Initializable {
                     outStream.write(buffer, 0, length);
 
                 }
-
+                Thread.sleep(100);
                 inStream.close();
+                afile.delete();
                 outStream.close();
+                Thread.sleep(1000);
 
                 //delete the original file
-                afile.delete();
+               // if (afile.delete()) {
+                    System.out.println("File is copied successful!");
+                    logger.debug("File is copied successful!");
+            //    }
 
-                System.out.println("File is copied successful!");
 
             } catch (IOException e) {
                 e.printStackTrace();
@@ -848,7 +1275,7 @@ public class MainController implements Initializable {
         faktury.clear();
         faktury = new ArrayList<>();
         try {
-            faktury = listOfInvoices(Settings.getListOfInvoices());
+            faktury = listOfInvoices(Preferences.getPreferences().getInvoices());
         } catch (Exception ex) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Import PZ");
@@ -886,8 +1313,9 @@ public class MainController implements Initializable {
 //        }
 
         buttonImport.setDisable(false);
-        buttonConnect.setDisable(false);
-        listOfDocuments.setDisable(false);
+        //buttonConnect.setDisable(false);
+        //listOfDocuments.setDisable(false);
+        FillTable();
         return true;
     }
 
@@ -901,7 +1329,7 @@ public class MainController implements Initializable {
         File[] listOfFiles = folder.listFiles();
 
         for (int i = 0; i < listOfFiles.length; i++) {
-            if ((listOfFiles[i].isFile()) && (listOfFiles[i].getName().contains("RPSH")) && (listOfFiles[i].getName().contains(".xml"))) {
+            if ((listOfFiles[i].isFile()) && (listOfFiles[i].getName().contains(".xml"))) {// (listOfFiles[i].getName().contains("RPSH")) &&
                 list.add(listOfFiles[i].getName());
                 //   System.out.println(listOfFiles[i].getName());
 //            } else if (listOfFiles[i].isDirectory()) {
@@ -914,29 +1342,29 @@ public class MainController implements Initializable {
     }
 
     // Sprawdzanie zaznaczenia i zwraca listę zaznaczonych plików
-    private List<String> sprawdz(String item, boolean zaznacz, boolean all) {
-        double rotate = listOfDocuments.getRotate();
-        if (zaznacz) {
-            invoices.add(item);
-//            for (int i = 0; i < 361; i++) {
-//                try {
-//                    listOfDocuments.setRotate(rotate += i);
+//    private List<String> sprawdz(String item, boolean zaznacz, boolean all) {
+//        double rotate = listOfDocuments.getRotate();
+//        if (zaznacz) {
+//            invoices.add(item);
+////            for (int i = 0; i < 361; i++) {
+////                try {
+////                    listOfDocuments.setRotate(rotate += i);
+////
+////                    Thread.sleep(100);
+////                } catch (InterruptedException e) {
+////                    e.printStackTrace();
+////                }
+////            }
 //
-//                    Thread.sleep(100);
-//                } catch (InterruptedException e) {
-//                    e.printStackTrace();
-//                }
-//            }
-
-
-            //    JOptionPane.showMessageDialog(null, invoices.toString() + " " + listOfXml.size());
-        } else if (!zaznacz) {
-            invoices.remove(item);
-            //   listOfDocuments.setRotate(rotate -= 10);
-            //     JOptionPane.showMessageDialog(null, invoices.toString() + " " + listOfXml.size());
-        }
-        return invoices;
-    }
+//
+//            //    JOptionPane.showMessageDialog(null, invoices.toString() + " " + listOfXml.size());
+//        } else if (!zaznacz) {
+//            invoices.remove(item);
+//            //   listOfDocuments.setRotate(rotate -= 10);
+//            //     JOptionPane.showMessageDialog(null, invoices.toString() + " " + listOfXml.size());
+//        }
+//        return invoices;
+//    }
 
 //    // TWORZENIE LISTY ZAMDOST
 //    private List<String> listOfZamdost(String path) {
@@ -970,7 +1398,7 @@ public class MainController implements Initializable {
         List<DocumentInvoiceModel> listOfInvoicesXml = new ArrayList<>();
         for (String invoice : invoicesList) {
             //  String inv=invoice.substring(0,invoice.lastIndexOf("xml")+3);
-            String file = Settings.getListOfInvoices() + invoice;
+            String file = Preferences.getPreferences().getInvoices() + invoice;
 
 
             //CartBpModel cartBpModel = new CartBpModel();
@@ -1109,7 +1537,7 @@ public class MainController implements Initializable {
             secondStage.setResizable(false);
             secondStage.initStyle(StageStyle.DECORATED);
             // secondStage.centerOnScreen();
-            secondStage.setScene(new Scene(root2, 585, 290));
+            secondStage.setScene(new Scene(root2, 585, 325));
             secondStage.show();
         } catch (IOException e) {
             logger.debug(e.getMessage());
@@ -1205,100 +1633,100 @@ public class MainController implements Initializable {
     }
 
     // Logowanie w oknie
-    private void addLog(String text) {
-        try {
-            textArea2.appendText(text + "\n");
-        } catch (Exception ex) {
-            logger.debug(ex.getMessage());
-        }
-    }
+//    private void addLog(String text) {
+//        try {
+//            textArea2.appendText(text + "\n");
+//        } catch (Exception ex) {
+//            logger.debug(ex.getMessage());
+//        }
+//    }
 
     // Zaznaczanie / odznaczanie wszystkich faktur
-    private void CheckIfChecked(boolean value) {
-
-
-        if (value) {
-            listOfDocuments.getSelectionModel().selectAll();
-
-
-        }
-
-        //  listOfDocuments.getCellFactory().call(listOfDocuments);
-        else if (!value) {
-            listOfDocuments.getSelectionModel().clearSelection();
-        }
-    }
+//    private void CheckIfChecked(boolean value) {
+//
+//
+//        if (value) {
+//            listOfDocuments.getSelectionModel().selectAll();
+//
+//
+//        }
+//
+//        //  listOfDocuments.getCellFactory().call(listOfDocuments);
+//        else if (!value) {
+//            listOfDocuments.getSelectionModel().clearSelection();
+//        }
+//    }
 
     // Wybór pliku do importu - otwieranie okna ( nieaktywne)
-    private void chooseFile() {
-        //  progressIndicator.setDisable(false);
-        progressBar.setDisable(false);
-        textArea2.clear();
-        File recordsDir;
-
-
-        FileChooser fileChooser = new FileChooser();
-
-        fileChooser.setTitle("Wskaż lokalizację pliku");
-        FileChooser.ExtensionFilter extFilter1 =
-                new FileChooser.ExtensionFilter("Faktura EDI", "*.xml");
-
-        FileChooser.ExtensionFilter extFilter3 =
-                new FileChooser.ExtensionFilter("Wszystkie pliki", "*.*");
-
-        // fileChooser.getExtensionFilters().add(extFilter2);
-        fileChooser.getExtensionFilters().add(extFilter1);
-        fileChooser.getExtensionFilters().add(extFilter3);
-//        filePath=loadPath();
-//       if(!filePath.equals("")){
-        // JOptionPane.showMessageDialog(null,loadPath().toString());
-
-        String filePath = loadPath();
-
-        Path path = Paths.get(filePath);
-        if (Files.exists(path)) {
-            recordsDir = new File(loadPath());
-        } else {
-            recordsDir = new File(System.getProperty("user.home"));
-        }
-
-        File existDirectory = recordsDir.getParentFile();
-        try {
-            fileChooser.setInitialDirectory(existDirectory);
-        } catch (Exception ex) {
-            logger.debug(ex.getStackTrace());
-            fileChooser.setInitialDirectory(recordsDir);
-            JOptionPane.showMessageDialog(null, existDirectory);
-        }
-//       }
-
-
-        File file = fileChooser.showOpenDialog(loadButton.getScene().getWindow());
-        try
-
-        {
-            filePath = file.getAbsolutePath();
-            //  JOptionPane.showMessageDialog(null, filePath);
-            savePath(filePath);
-            //   int kat=filePath.lastIndexOf("\\");
-
-            extension = file.getName().substring(file.getName().lastIndexOf("."), file.getName().length());
-            //   Settings.setLastVisitedDirectory(filePath);
-            //   Settings.saveDirectory(filePath);
-
-            textFileImport.setText(filePath);
-            //runImport();
-            //  RowModel rowModel=new RowModel(new CheckBox(),filePath,)
-
-
-        } catch (
-                Exception ex)
-
-        {
-            logger.debug(ex.getMessage());
-            Utils.createSimpleDialog("Wskaż plik", "", "Nie wskazano pliku do zaimportowania !", Alert.AlertType.ERROR);
-        }
-    }
+//    private void chooseFile() {
+//        //  progressIndicator.setDisable(false);
+//        progressBar.setDisable(false);
+//        textArea2.clear();
+//        File recordsDir;
+//
+//
+//        FileChooser fileChooser = new FileChooser();
+//
+//        fileChooser.setTitle("Wskaż lokalizację pliku");
+//        FileChooser.ExtensionFilter extFilter1 =
+//                new FileChooser.ExtensionFilter("Faktura EDI", "*.xml");
+//
+//        FileChooser.ExtensionFilter extFilter3 =
+//                new FileChooser.ExtensionFilter("Wszystkie pliki", "*.*");
+//
+//        // fileChooser.getExtensionFilters().add(extFilter2);
+//        fileChooser.getExtensionFilters().add(extFilter1);
+//        fileChooser.getExtensionFilters().add(extFilter3);
+////        filePath=loadPath();
+////       if(!filePath.equals("")){
+//        // JOptionPane.showMessageDialog(null,loadPath().toString());
+//
+//        String filePath = loadPath();
+//
+//        Path path = Paths.get(filePath);
+//        if (Files.exists(path)) {
+//            recordsDir = new File(loadPath());
+//        } else {
+//            recordsDir = new File(System.getProperty("user.home"));
+//        }
+//
+//        File existDirectory = recordsDir.getParentFile();
+//        try {
+//            fileChooser.setInitialDirectory(existDirectory);
+//        } catch (Exception ex) {
+//            logger.debug(ex.getStackTrace());
+//            fileChooser.setInitialDirectory(recordsDir);
+//            JOptionPane.showMessageDialog(null, existDirectory);
+//        }
+////       }
+//
+//
+//        File file = fileChooser.showOpenDialog(loadButton.getScene().getWindow());
+//        try
+//
+//        {
+//            filePath = file.getAbsolutePath();
+//            //  JOptionPane.showMessageDialog(null, filePath);
+//            savePath(filePath);
+//            //   int kat=filePath.lastIndexOf("\\");
+//
+//            extension = file.getName().substring(file.getName().lastIndexOf("."), file.getName().length());
+//            //   Settings.setLastVisitedDirectory(filePath);
+//            //   Settings.saveDirectory(filePath);
+//
+//            textFileImport.setText(filePath);
+//            //runImport();
+//            //  RowModel rowModel=new RowModel(new CheckBox(),filePath,)
+//
+//
+//        } catch (
+//                Exception ex)
+//
+//        {
+//            logger.debug(ex.getMessage());
+//            Utils.createSimpleDialog("Wskaż plik", "", "Nie wskazano pliku do zaimportowania !", Alert.AlertType.ERROR);
+//        }
+//    }
 
 
     //  okay.addActionListener(new ActionListener() {
