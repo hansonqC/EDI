@@ -10,13 +10,13 @@ import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextArea;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.layout.GridPane;
@@ -51,9 +51,9 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import java.awt.*;
 import java.io.*;
 import java.net.URL;
-import java.util.*;
 import java.util.List;
 import java.util.Timer;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -234,7 +234,7 @@ public class MainController implements Initializable {
         gridPane.add(textArea, 0, 0);
 
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-         Stage stage = (Stage) alert.getDialogPane().getScene().getWindow();
+        Stage stage = (Stage) alert.getDialogPane().getScene().getWindow();
 
 // Add a custom icon.
         stage.getIcons().add(new Image(getClass().getClassLoader().getResourceAsStream("logo.png")));
@@ -478,12 +478,11 @@ public class MainController implements Initializable {
 
             if ((!combo.getValue().equals("")) && (!combo.getSelectionModel().isEmpty())) {
                 dao = new DocumentInvoiceDaoImpl();
-               String mag = combo.getValue().toString();
+                String mag = combo.getValue().toString();
                 try {
                     dao.UpdateUrzzew(Preferences.getPreferences().getKodUrzZew(), mag);
                     Thread.sleep(500);
-                  //  JOptionPane.showMessageDialog(null, mag);
-
+                    //  JOptionPane.showMessageDialog(null, mag);
 
 
                 } catch (Exception ex) {
@@ -551,7 +550,7 @@ public class MainController implements Initializable {
                 if (exist) {
                     JOptionPane.showMessageDialog(null, "Dokument o numerze: " + invoiceNumber + " był już importowany !\nPlik : " + fileName, "Błąd importu", JOptionPane.ERROR_MESSAGE);
                     logger.debug("Dokument o numerze: " + invoiceNumber + " był już importowany");
-                   // Odswiez();
+                    // Odswiez();
                     break;
 
 
@@ -624,9 +623,11 @@ public class MainController implements Initializable {
 //                    cartModelEdi.setNetPice(line.getLineItemModel().getProductFeeDetailsModel().getUnitNetPriceWithoutFee());
 //                }
                     String eanX = line.getDetailModel().getEan();
+                    //   JOptionPane.showMessageDialog(null, eanX);
                     String supplierCodeX = line.getDetailModel().getSupplierItemCode();
                     cartModel.setIndeks(supplierCodeX);
                     kart_indeks = documentInvoiceDao.GetKartIndeksByEan(eanX);
+                    JOptionPane.showMessageDialog(null, kart_indeks + " ean");
                     if ((kart_indeks != null) && (!kart_indeks.isEmpty())) {
                         cartModelEdi.setIndeks(kart_indeks);
                         //  cartModel.setIndeks(kart_indeks);
@@ -1023,12 +1024,12 @@ public class MainController implements Initializable {
                 try {
                     // JOptionPane.showMessageDialog(null, invoiceModel);
                     urzzew_nagl = documentInvoiceDao.ImportPzNagl(invoiceModel2);
-                    //   JOptionPane.showMessageDialog(null,"URZZEWNAGL :"+urzzew_nagl);
+                       JOptionPane.showMessageDialog(null,"URZZEWNAGL :"+urzzew_nagl);
                     for (CartModelEdi cartModelEdi1 : invoiceModel2.getPozycje()) {
                         try {
                             //    JOptionPane.showMessageDialog(null, cartModelEdi1.toString());
-                            documentInvoiceDao.ImportPzPoz(invoiceModel2, cartModelEdi1, urzzew_nagl);
-                            // Thread.sleep();
+                            int pozycja = documentInvoiceDao.ImportPzPoz(invoiceModel2, cartModelEdi1, urzzew_nagl);
+                            JOptionPane.showMessageDialog(null, pozycja); // Thread.sleep();
                         } catch (Exception ex) {
                             JOptionPane.showMessageDialog(null, "Błąd importu pozycji dokumentu : " + fileName, "Błąd importu 1", JOptionPane.ERROR_MESSAGE);
                             buttonImport.setDisable(false);
@@ -1067,9 +1068,7 @@ public class MainController implements Initializable {
                 // return invoiceModel2;
             }
         } catch (
-                Exception ex)
-
-        {
+                Exception ex) {
             ex.printStackTrace();
             logger.debug(ex.getMessage());
             return null;
@@ -1230,10 +1229,10 @@ public class MainController implements Initializable {
                 Thread.sleep(1000);
 
                 //delete the original file
-               // if (afile.delete()) {
-                    System.out.println("File is copied successful!");
-                    logger.debug("File is copied successful!");
-            //    }
+                // if (afile.delete()) {
+                System.out.println("File is copied successful!");
+                logger.debug("File is copied successful!");
+                //    }
 
 
             } catch (IOException e) {

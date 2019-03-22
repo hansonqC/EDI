@@ -9,7 +9,6 @@ import pl.hansonq.models.InvoiceModel.InvoiceModel;
 import pl.hansonq.utils.FirebirdConnector;
 import pl.hansonq.utils.Preferences;
 
-import javax.swing.*;
 import java.math.BigDecimal;
 import java.sql.*;
 import java.time.LocalDateTime;
@@ -29,9 +28,11 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
 
     private int blad;
     private int id_poz;
+
     private int id_kartoteka;
     public static int new_kart;
     private boolean addNewCart = false;
+
 
     @Override
     public List<Integer> getKontrah(String nip, String iln) {
@@ -186,7 +187,9 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
         LocalDateTime dateTime = LocalDateTime.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         String timestamp = dateTime.format(formatter);
+
         //   String timestamp = invoiceModel.getInvoiceDate();
+
         try {
             CallableStatement statement = conect.prepareCall("{call XXX_LC_EDI_URZZEWNAGL_ADD_7(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)}");
 
@@ -234,7 +237,7 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
             try {
                 id_nagl = statement.getInt(37);
                 blad = statement.getInt(38);
-                // JOptionPane.showMessageDialog(null,id_kartoteka+" ,"+"nowa :"+new_kart);
+                //     JOptionPane.showMessageDialog(null, id_nagl);
 
 
             } catch (Exception ex) {
@@ -243,6 +246,7 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
                 id_nagl = 0;
 
             }
+            statement.close();
             return id_nagl;
 
         } catch (SQLException ex) {
@@ -304,7 +308,9 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
         int id_poz = 0;
         int blad = 0;
         try {
+
             CallableStatement statement = conect.prepareCall("{call XXX_LC_EDI_URZZEWPOZ_ADD_9(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?  )}");
+
 
             statement.registerOutParameter(25, Types.INTEGER);
             statement.registerOutParameter(26, Types.INTEGER);
@@ -340,7 +346,6 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
 
                 id_poz = statement.getInt(25);
                 blad = statement.getInt(26);
-                //    JOptionPane.showMessageDialog(null,id_poz+" ,"+blad);
 
 
             } catch (Exception ex) {
@@ -350,7 +355,7 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
 
             }
             //return id_nagl;
-
+            statement.close();
         } catch (SQLException ex) {
             ex.printStackTrace();
             logger.debug(ex.getMessage());
@@ -444,6 +449,8 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
             statement2.setString(1, ean);
             statement2.execute();
             indeks = statement2.getString(2);
+
+
             return indeks;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -457,14 +464,6 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
             // Utils.createSimpleDialog("Błąd importu danych", "", "Błąd podczas usuwania kartoteki o indeksie "+cartModel.getIndeks()+", komunikat błędu :\n" + e.getMessage(), Alert.AlertType.ERROR);
             //  return false;
             return null;
-        } finally {
-            try {
-                statement2.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-                logger.debug(e.getMessage());
-            }
-            // return indeks;
         }
 
     }
@@ -564,6 +563,7 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
         }
         return false;
     }
+
 
     @Override
     public boolean CheckIfDocumentExists2(String nrdok) {
@@ -694,17 +694,22 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
 
     @Override
     public int GetIdNaglPZ(String number) {
+
         CallableStatement statement2 = null;
+
         int id_nagl = 0;
 
         try {
             conect.setAutoCommit(true);
             //   conn.connectionTest();
+
             statement2 = conect.prepareCall("{call XXX_LC_EDI_GETPZ(?,?)}");
             statement2.registerOutParameter(2, Types.INTEGER);// trim(replace(?, '-', ''))");
             statement2.setString(1, number);
             statement2.execute();
             id_nagl = statement2.getInt(2);
+
+
             return id_nagl;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -735,7 +740,11 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
             statement2.registerOutParameter(3, Types.INTEGER);// trim(replace(?, '-', ''))");
             statement2.setString(1, number);
             statement2.setInt(2, idKontrah);
+
             //  ResultSet rs = statement2.executeQuery();
+
+            //ResultSet rs = statement2.executeQuery();
+
             statement2.execute();
             id_nagl = statement2.getInt(3);
             return id_nagl;
@@ -743,7 +752,7 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
         } catch (SQLException e) {
             e.printStackTrace();
             logger.debug(e.getMessage());
-            return 0;
+            // return 0;
             //Utils.createSimpleDialog("Błąd importu danych", "", "Błąd podczas usuwania kartoteki o indeksie "+cartModel.getIndeks()+", komunikat błędu :\n" + e.getMessage(), Alert.AlertType.ERROR);
 
         } catch (Exception e) {
@@ -751,7 +760,7 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
             logger.debug(e.getMessage());
             // Utils.createSimpleDialog("Błąd importu danych", "", "Błąd podczas usuwania kartoteki o indeksie "+cartModel.getIndeks()+", komunikat błędu :\n" + e.getMessage(), Alert.AlertType.ERROR);
             //  return false;
-            return 0;
+            // return 0;
 //        } finally {
 //            try {
 //                statement2.close();
@@ -763,7 +772,7 @@ public class DocumentInvoiceDaoImpl implements DocumentInvoiceDao {
 //        }
 
         }
-        //  return id_nagl;
+        return id_nagl;
     }
 
     @Override
